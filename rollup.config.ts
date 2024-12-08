@@ -2,7 +2,8 @@ import typescript from "@rollup/plugin-typescript"
 import dts from "rollup-plugin-dts"
 import esbuild from "rollup-plugin-esbuild"
 import { reportDetails } from "rollup-plugin-bundlens"
-const external = ["node:path", "node:zlib", "node:util"]
+
+const external = []
 
 export default [
 	{
