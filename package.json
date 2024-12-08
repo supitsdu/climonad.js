@@ -1,0 +1,52 @@
+{
+  "name": "climonad",
+  "version": "0.1.0",
+  "description": "A modern, type-safe, and performant approach to building command-line interfaces.",
+  "main": "dist/main.js",
+  "type": "module",
+  "module": "./dist/main.mjs",
+  "types": "./dist/main.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/main.cjs",
+      "import": "./dist/main.mjs",
+      "types": "./dist/main.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rollup -c rollup.config.ts --configPlugin typescript",
+    "test": "vitest -c vitest.config.ts",
+    "lint": "biome ci",
+    "lint:fix": "biome check --write",
+    "format": "prettier --write *.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supitsdu/climonad.js.git"
+  },
+  "keywords": [
+    "cli"
+  ],
+  "author": "Eduardo M. Santos <contact@supitsdu.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/supitsdu/climonad.js/issues"
+  },
+  "homepage": "https://github.com/supitsdu/climonad.js#readme",
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@rollup/plugin-typescript": "^12.1.1",
+    "prettier": "^3.4.2",
+    "rollup-plugin-bundlens": "^0.1.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-esbuild": "^6.1.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

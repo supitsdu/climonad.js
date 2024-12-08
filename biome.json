@@ -1,0 +1,57 @@
+{
+	"files": {
+		"ignore": ["node_modules", "coverage", "docs", ".github", "_test", "build", "dist"],
+		"include": ["src/*.ts", "test/*.ts", "*.config.ts"]
+	},
+	"organizeImports": { "enabled": true },
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"ignore": [],
+		"attributePosition": "auto",
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 120,
+		"lineEnding": "lf"
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"arrowParentheses": "asNeeded",
+			"bracketSameLine": false,
+			"bracketSpacing": true,
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"semicolons": "asNeeded",
+			"trailingCommas": "all",
+			"lineEnding": "lf"
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"complexity": {
+				"noStaticOnlyClass": "warn",
+				"noForEach": "off"
+			},
+			"suspicious": {
+				"noDebugger": "off",
+				"noConsoleLog": "warn",
+				"noExplicitAny": "off",
+				"noConfusingVoidType": "off",
+				"noGlobalIsNan": "off"
+			},
+			"style": {
+				"noShoutyConstants": "warn",
+				"useNamingConvention": "off",
+				"noNonNullAssertion": "off",
+				"noInferrableTypes": "off",
+				"useNumberNamespace": "off"
+			},
+			"correctness": {
+				"noUnusedVariables": "warn",
+				"noUnusedImports": "warn"
+			}
+		}
+	}
+}
