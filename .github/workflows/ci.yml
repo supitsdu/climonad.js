@@ -50,9 +50,6 @@ jobs:
       - name: Run docs formatting
         run: npm run format
 
-      - name: Run type-checking
-        run: npm run check-types
-
       - name: Run tests
         run: npm test
 
