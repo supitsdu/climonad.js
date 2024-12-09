@@ -1,7 +1,7 @@
 import typescript from "@rollup/plugin-typescript"
+import { reportDetails } from "rollup-plugin-bundlens"
 import dts from "rollup-plugin-dts"
 import esbuild from "rollup-plugin-esbuild"
-import { reportDetails } from "rollup-plugin-bundlens"
 
 const external = []
 
