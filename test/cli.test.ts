@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { Cli } from "../src/cli"
 import { Cmd } from "../src/commands"
 import { Bool } from "../src/options"

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { Parser } from "../src/parser"
-import { Bool, Num, Str } from "../src/options"
 import { Cmd } from "../src/commands"
+import { Bool, Num, Str } from "../src/options"
+import { Parser } from "../src/parser"
 
 describe("Parser", () => {
 	describe("option parsing", () => {
