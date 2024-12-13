@@ -1,5 +1,25 @@
-import type { CliData, OptionConfig } from "./types"
+import { Utils } from "./utils"
 
+/**
+ * Configuration object for defining command line options.
+ * Used when creating new option instances like Bool, Str, or Num.
+ * @since 0.1.0
+ */
+export interface OptionConfig {
+	/** Full name of the option (e.g., "verbose" for --verbose) */
+	name: string
+	/** Single character alias (e.g., "v" for -v) */
+	alias?: string
+	aliases?: string[]
+	/** Description displayed in help text */
+	description?: string
+	/** Default value if option is not provided */
+	default?: any
+	/** Whether the option must be provided */
+	required?: boolean
+	/** Number of values expected for this option */
+	totalValues?: number
+}
 /**
  * The `Option` class is the base class for defining command line options.
  * It provides a common interface for defining and parsing options.
@@ -12,36 +32,30 @@ import type { CliData, OptionConfig } from "./types"
  */
 export class Option {
 	name: string
-	alias: string
-	keys: string[]
-	value: any
-	defaultValue: any
+	flag: string
+	aliases?: string[]
+	default: any
 	totalValues?: number
 	description: string
 	required: boolean
-	fn?: (data: CliData) => void
 	type?: string
+	parent?: string
 
 	constructor(config: OptionConfig) {
 		this.name = config.name
-		this.alias = config.alias
-		this.keys = [`--${config.name}`, `-${config.alias}`]
-		this.value = config.defaultValue
-		this.defaultValue = config.defaultValue
+		this.flag = `--${config.name}`
+		this.aliases = Utils.mergeAliases([config.alias, ...(config.aliases ?? [])], flag => `-${flag}`)
+		this.default = config.default
 		this.totalValues = config.totalValues
-		this.description = config.description
+		this.description = config.description ?? ""
 		this.required = config.required || false
-		this.fn = config.fn
 	}
 
-	validateValue(value: any): any {
-		if (this.required && (value === undefined || value === null || value === "")) {
-			throw new Error(`No value provided for required option: ${this.name}`)
-		}
-		return value
+	isEmptyValue(value: any): boolean {
+		return value === undefined || value === null || value === ""
 	}
 
-	parse(_?: unknown): unknown {
+	validate(_: any): any {
 		throw new Error("Method not implemented.")
 	}
 }
@@ -58,7 +72,7 @@ export class Option {
  * 	name: "verbose",
  * 	alias: "v",
  * 	description: "Enable verbose output",
- * 	defaultValue: false,
+ * 	default: false,
  * })
  *
  * // $ mycli --verbose
@@ -72,18 +86,10 @@ export class Bool extends Option {
 		this.type = "boolean"
 	}
 
-	override parse(input?: string | boolean): boolean {
-		if (input === undefined || input === "" || input === null) {
-			return true
-		}
+	override validate(input?: string | boolean): boolean {
+		if (this.isEmptyValue(input)) return this.default ?? true
 
-		const result = input === "true" || input === true ? true : input === "false" || input === false ? false : undefined
-
-		if (result === undefined) {
-			throw new Error(`Invalid value for '${this.keys.join(", ")}' option`)
-		}
-
-		return this.validateValue(result)
+		return `${input}` === "true" ? true : `${input}` === "false" ? false : (this.default ?? undefined)
 	}
 }
 
@@ -113,8 +119,8 @@ export class Str extends Option {
 		this.type = "string"
 	}
 
-	override parse(value?: string): string {
-		return this.validateValue(value ?? (this.required ? undefined : (this.defaultValue ?? "")))
+	override validate(value?: string): string {
+		return !this.isEmptyValue(value) ? value : this.default
 	}
 }
 
@@ -130,7 +136,7 @@ export class Str extends Option {
  * 	name: "count",
  * 	alias: "c",
  * 	description: "Number of items",
- * 	defaultValue: 0,
+ * 	default: 0,
  * })
  *
  * // $ mycli --count 10
@@ -144,14 +150,10 @@ export class Num extends Option {
 		this.type = "number"
 	}
 
-	override parse(input?: string | number): number {
-		const value = input ?? (this.required ? undefined : (this.defaultValue ?? 0))
+	override validate(input?: string | number): boolean {
+		const value = input ?? (this.required ? undefined : (this.default ?? 0))
 		const result = Number(value)
 
-		if (isNaN(result)) {
-			throw new Error(`Invalid value for option ${this.name}`)
-		}
-
-		return this.validateValue(result)
+		return isNaN(result) ? this.default : result
 	}
 }

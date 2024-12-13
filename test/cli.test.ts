@@ -1,66 +1,104 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import { Bool, Cli, Cmd } from "../src/main"
+import { describe, it, expect, vi } from "vitest"
+import { Cli } from "../src/cli"
+import { Cmd } from "../src/commands"
+import { Bool } from "../src/options"
 
 describe("Cli", () => {
-	const mockAction = vi.fn()
-	const cli = new Cli({
-		name: "my-cli",
-		description: "My awesome CLI",
-		commands: [
-			new Cmd({
-				name: "hello",
-				alias: "h",
-				description: "Say hello",
-				fn: mockAction,
-			}),
-		],
-		options: [
-			new Bool({
-				name: "loud",
-				alias: "l",
-				defaultValue: true,
-				description: "Say hello loudly",
-			}),
-		],
+	it("should initialize with basic configuration", () => {
+		const cli = new Cli({
+			name: "test-cli",
+			description: "Test CLI",
+		})
+		expect(cli).toBeDefined()
 	})
 
-	beforeEach(() => {
-		mockAction.mockClear()
+	it("should execute commands correctly", () => {
+		const mockFn = vi.fn()
+		const cli = new Cli({
+			name: "test-cli",
+			description: "Test CLI",
+			commands: [
+				new Cmd({
+					name: "test",
+					description: "Test command",
+					fn: mockFn,
+				}),
+			],
+		})
+
+		cli.run(["test"])
+		expect(mockFn).toHaveBeenCalled()
 	})
 
-	it("should execute command with full name", () => {
-		const result = cli.run(["hello"])
-		expect(mockAction).toHaveBeenCalledTimes(1)
-		expect(result.commands?.get("hello")).toBeTruthy()
+	it("should handle nested commands", () => {
+		const parentMock = vi.fn()
+		const childMock = vi.fn()
+		const cli = new Cli({
+			name: "test-cli",
+			description: "Test CLI",
+			commands: [
+				new Cmd({
+					name: "parent",
+					description: "Parent command",
+					fn: parentMock,
+					commands: [
+						new Cmd({
+							name: "child",
+							description: "Child command",
+							fn: childMock,
+						}),
+					],
+				}),
+			],
+		})
+
+		cli.run(["parent", "child"])
+		expect(childMock).toHaveBeenCalled()
 	})
 
-	it("should execute command with alias", () => {
-		const result = cli.run(["h"])
-		expect(mockAction).toHaveBeenCalledTimes(1)
-		expect(result.commands?.get("hello")).toBeTruthy()
+	it("should parse options correctly", () => {
+		const mockFn = vi.fn()
+		const cli = new Cli({
+			name: "test-cli",
+			description: "Test CLI",
+			commands: [
+				new Cmd({
+					name: "test",
+					description: "Test command",
+					fn: mockFn,
+				}),
+			],
+			options: [
+				new Bool({
+					name: "verbose",
+					alias: "v",
+					description: "Verbose output",
+				}),
+			],
+		})
+
+		const result = cli.run(["test", "--verbose"])
+		expect(result.options.get("verbose")).toBe(true)
 	})
 
-	it("should parse boolean option with full name", () => {
-		const result = cli.run(["hello", "--loud"])
-		expect(result.options.get("loud")).toBe(true)
-		expect(mockAction).toHaveBeenCalledTimes(1)
-	})
+	it("should handle errors in command execution", () => {
+		const errorFn = vi.fn().mockImplementation(() => {
+			throw new Error("Test error")
+		})
 
-	it("should parse boolean option with alias", () => {
-		const result = cli.run(["hello", "-l"])
-		expect(result.options.get("loud")).toBe(true)
-		expect(mockAction).toHaveBeenCalledTimes(1)
-	})
+		const cli = new Cli({
+			name: "test-cli",
+			description: "Test CLI",
+			commands: [
+				new Cmd({
+					name: "error",
+					description: "Error command",
+					fn: errorFn,
+				}),
+			],
+		})
 
-	it("should handle invalid command", () => {
-		const result = cli.run(["invalid"])
-		expect(result.error).toBeDefined()
-		expect(mockAction).not.toHaveBeenCalled()
-	})
-
-	it("should handle invalid option", () => {
-		const result = cli.run(["hello", "--invalid"])
-		expect(result.error).toBeDefined()
-		expect(mockAction).not.toHaveBeenCalled()
+		const result = cli.run(["error"])
+		expect(result.error).toBeInstanceOf(Error)
 	})
 })

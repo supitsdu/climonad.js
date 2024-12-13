@@ -1,6 +1,6 @@
 import type { Cmd } from "./commands"
 import type { Option } from "./options"
-import { parser } from "./parser"
+import { Parser } from "./parser"
 import type { CliData } from "./types"
 
 export interface CliConfig {
@@ -44,38 +44,13 @@ export interface CliConfig {
  * @since 0.1.0
  */
 export class Cli {
-	name: string
-	description: string
-	commands: Map<string, Cmd>
-	options: Map<string, Option>
+	private parser: Parser
 
 	constructor(config: CliConfig) {
-		this.name = config.name
-		this.description = config.description
-		this.commands = new Map()
-		this.options = new Map()
-
-		if (Array.isArray(config.commands)) {
-			for (const command of config.commands) {
-				for (const key of command.keys) {
-					if (this.commands.has(key)) {
-						throw new Error(`Duplicate command key: ${key}`)
-					}
-					this.commands.set(key, command)
-				}
-			}
-		}
-
-		if (Array.isArray(config.options)) {
-			for (const option of config.options) {
-				for (const key of option.keys) {
-					if (this.options.has(key)) {
-						throw new Error(`Duplicate option key: ${key}`)
-					}
-					this.options.set(key, option)
-				}
-			}
-		}
+		this.parser = new Parser({
+			options: config.options ?? [],
+			commands: config.commands ?? [],
+		})
 	}
 
 	/**
@@ -90,25 +65,19 @@ export class Cli {
 	 * @since 0.1.0
 	 */
 	run(args: string[]): CliData {
-		let data: CliData = { options: new Map(), commands: new Map() }
+		const parsed = this.parser.parse(args)
+		let runError: unknown
 		try {
-			const parsedArgs = parser(args, {
-				options: this.options,
-				commands: this.commands,
-			})
-
-			data = {
-				options: parsedArgs.options,
-				commands: parsedArgs.command,
-			}
-
-			for (const fn of parsedArgs.callstack) {
-				fn?.(data)
-			}
+			// Execute the command action functions
+			parsed.actions.forEach(action => action(parsed))
 		} catch (error) {
-			data.error = error as Error
+			runError = error
 		}
 
-		return data
+		return {
+			commands: parsed.commands,
+			options: parsed.options,
+			error: runError as Error,
+		}
 	}
 }

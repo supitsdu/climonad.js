@@ -1,5 +1,6 @@
 import type { Option } from "./options"
 import type { CliData } from "./types"
+import { Utils } from "./utils"
 
 /**
  * The `CommandConfig` interface represents the configuration object for a command.
@@ -13,7 +14,8 @@ export interface CommandConfig {
 	/**
 	 * The alias for the command. Usually a single character (e.g., "h" for "help").
 	 */
-	alias: string
+	alias?: string
+	aliases?: string[]
 	/**
 	 * The list of options for the command. Only available within the command scope.
 	 * ```js
@@ -28,10 +30,11 @@ export interface CommandConfig {
 	 * ```
 	 */
 	options?: Option[]
+	commands?: Cmd[]
 	/**
 	 * The description of the command.
 	 */
-	description: string
+	description?: string
 	/**
 	 * The action function to execute when the command is called.
 	 * ```js
@@ -54,15 +57,15 @@ export interface CommandConfig {
  *
  * ```js
  * const help = new Cmd({
- * 	name: "help",
- * 	alias: "h",
- * 	description: "Display help information",
+ * 	name: "initialize",
+ * 	alias: "init",
+ * 	description: "Initialize the application",
  * 	options: [
  * 		new Bool({
- * 			name: "verbose",
+ * 			flag: "verbose",
  * 			alias: "v",
  * 			description: "Enable verbose output",
- * 			defaultValue: false,
+ * 			default: false,
  * 		}),
  *	],
  *  fn: ({ options }) => {
@@ -75,27 +78,59 @@ export interface CommandConfig {
  */
 export class Cmd {
 	name: string
-	alias: string
-	keys: string[]
+	aliases?: string[]
 	description: string
-	options: Map<string, Option>
+	entries: Map<string, Option | Cmd>
 	fn?: (data: CliData) => void
 
 	constructor(config: CommandConfig) {
 		this.name = config.name
-		this.alias = config.alias
-		this.keys = [`${config.name}`, `${config.alias}`]
-		this.description = config.description
-		this.options = new Map()
+		this.aliases = Utils.mergeAliases([config.alias, ...(config.aliases ?? [])], flag => flag)
+		this.description = config.description ?? ""
+		this.entries = new Map()
 		this.fn = config.fn
 
-		if (Array.isArray(config.options)) {
-			for (const option of config.options) {
-				for (const key of option.keys) {
-					if (this.options.has(key)) {
-						throw new Error(`Duplicate option key: ${key}`)
-					}
-					this.options.set(key, option)
+		flatEntries(config.options, config.commands, this.entries)
+	}
+}
+
+/**
+ * Populates a map with entries from the provided options and commands arrays.
+ *
+ * @template O - The type of the option objects.
+ * @template C - The type of the command objects.
+ *
+ * @param {any[] | undefined} option - An array of option objects, each containing a `flag` and optionally `aliases`.
+ * @param {any[] | undefined} commands - An array of command objects, each containing a `command` and optionally `aliases`.
+ * @param {Map<string, O | C>} entries - A map to be populated with the entries from the options and commands arrays.
+ *
+ * @remarks
+ * This function iterates over the provided `option` and `commands` arrays, adding each entry to the `entries` map.
+ * For each option, it adds the entry using the `flag` as the key and also adds entries for each alias if they exist.
+ * Similarly, for each command, it adds the entry using the `command` as the key and also adds entries for each alias if they exist.
+ */
+export function flatEntries<O extends Option, C extends Cmd>(
+	option: O[] | undefined,
+	commands: C[] | undefined,
+	entries: Map<string, O | C>,
+): void {
+	if (option) {
+		for (const opt of option) {
+			entries.set(opt.flag, opt)
+			if (opt.aliases) {
+				for (const alias of opt.aliases) {
+					if (alias) entries.set(alias, opt)
+				}
+			}
+		}
+	}
+
+	if (commands) {
+		for (const cmd of commands) {
+			entries.set(cmd.name, cmd)
+			if (cmd.aliases) {
+				for (const alias of cmd.aliases) {
+					if (alias) entries.set(alias, cmd)
 				}
 			}
 		}

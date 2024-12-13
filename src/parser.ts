@@ -1,84 +1,111 @@
-import type { Cmd } from "./commands"
-import type { Option } from "./options"
+import { Cmd, flatEntries } from "./commands"
+import { Option } from "./options"
 import type { ParsedArgs } from "./types"
+import { Utils } from "./utils"
+
+export interface ParserOptions {
+	options: Option[]
+	commands: Cmd[]
+}
+
+export type Entries = Map<string, Option | Cmd>
 
 /**
- * Parses command line arguments into a structured format.
+ * A command-line argument parser that handles options and commands.
  *
- * @internal This function is not intended to be used directly by consumers.
- * @param args Array of command line argument strings to parse
- * @param options Configuration object containing valid options and commands
- * @since v0.1.0
+ * The Parser class provides functionality to:
+ * - Parse command line arguments into structured data
+ * - Validate option values
+ * - Handle command and subcommand hierarchies
+ * - Provide descriptive error messages for unknown inputs
+ *
+ * @throws {Error} When initialization fails due to invalid configuration
  */
-export function parser(
-	args: string[],
-	{ options, commands }: { options: Map<string, Option>; commands: Map<string, Cmd> },
-): ParsedArgs {
-	const data: ParsedArgs = {
-		command: new Map(),
-		options: new Map(),
-		callstack: new Set(),
+export class Parser {
+	private readonly globalEntries: Map<string, Option | Cmd>
+	private entries: Entries = new Map()
+
+	constructor(parserOptions: ParserOptions) {
+		this.globalEntries = new Map()
+		flatEntries(parserOptions.options, parserOptions.commands, this.globalEntries)
 	}
 
-	const usedIndices = new Set<number>()
+	public parse(args: string[]): ParsedArgs {
+		this.entries = this.globalEntries
+		const indices = new Set<number>()
+		const data = { commands: new Set(), options: new Map(), actions: new Map() } as ParsedArgs
 
-	for (let i = 0; i < args.length; i++) {
-		if (usedIndices.has(i)) continue
+		for (const [index, arg] of args.entries()) {
+			if (indices.has(index)) continue
 
-		const currentArg = args[i]
-		const equalSignIndex = currentArg.indexOf("=")
-		const argName = equalSignIndex > -1 ? currentArg.slice(0, equalSignIndex) : currentArg
-		const option = options.get(argName)
+			const entry = this.getEntry(arg)
 
-		if (option) {
-			if (data.options.has(option.name)) {
-				throw new Error(`Duplicate option: ${option.name}`)
+			if (entry instanceof Option) {
+				const validatedValue = this.validateOption(entry, args[index + 1], indices, index)
+				data.options.set(entry.name, validatedValue)
+				continue
 			}
 
-			let optionValue: string | undefined
-
-			if (equalSignIndex > -1) {
-				optionValue = currentArg.slice(equalSignIndex + 1)
-			} else {
-				const nextArg = args[i + 1]
-				if (nextArg && !nextArg.startsWith("-")) {
-					optionValue = nextArg
-					usedIndices.add(i + 1)
-					i++
-				}
+			if (entry instanceof Cmd && this.entries.has(arg)) {
+				data.commands.add(entry.name)
+				this.setLocalEntries(entry.entries)
+				this.setFn(entry.name, entry.fn, data)
+				continue
 			}
 
-			data.options.set(option.name, option.parse(optionValue))
-			if (typeof option?.fn === "function") data.callstack.add(option.fn)
-			continue
-		}
+			const closest = Utils.closestString(arg, this.entries.keys())
 
-		const command = commands.get(argName)
-		if (command && !usedIndices.has(i)) {
-			if (data.command.has(command.name)) {
-				throw new Error(`Duplicate command: ${command.name}`)
+			if (closest) {
+				throw new Error(`Unknown command or option "${arg}". Did you mean "${closest}"?`)
 			}
 
-			if (typeof command?.fn === "function") data.callstack.add(command.fn)
-
-			data.command.set(command.name, true)
-			continue
+			throw new Error(`Unknown command or option "${arg}"`)
 		}
 
-		if (!usedIndices.has(i)) {
-			throw new Error(`Invalid argument: ${argName}`)
-		}
+		this.resetEntries()
+		return data
 	}
 
-	for (const [_, option] of options) {
-		if (option.required && !data.options.has(option.name)) {
-			throw new Error(`Missing required option: ${option.name}`)
-		}
-
-		if (!data.options.has(option.name) && "defaultOption" in option) {
-			data.options.set(option.name, option.parse(option.defaultValue))
-		}
+	private getEntry(flag: string): Option | Cmd | undefined {
+		return this.entries.get(flag) ?? this.globalEntries.get(flag)
 	}
 
-	return data
+	private setLocalEntries(localEntries: Entries) {
+		if (localEntries.size) this.entries = localEntries
+	}
+
+	private resetEntries() {
+		this.entries = new Map()
+	}
+
+	private setFn(flag: string, fn: ((data: ParsedArgs) => void) | undefined, data: ParsedArgs) {
+		if (fn) data.actions.set(flag, (d: ParsedArgs = data) => fn(d))
+	}
+
+	private isNextArgumentAnOption(nextArg: string | undefined): boolean {
+		return Boolean(nextArg && (this.entries.has(nextArg) || this.globalEntries.has(nextArg)))
+	}
+
+	private shouldIncludeNextIndex(validatedValue: any, nextArg: string | undefined): boolean {
+		return validatedValue !== undefined && nextArg !== undefined
+	}
+
+	private getEffectiveValue(entry: Option, validatedValue: any): any {
+		return entry.default !== undefined && entry.isEmptyValue(validatedValue) ? entry.default : validatedValue
+	}
+
+	private validateOption(option: Option, nextArgument: string | undefined, indices: Set<number>, index: number): any {
+		const nextArg = this.isNextArgumentAnOption(nextArgument) ? undefined : nextArgument
+		const validatedValue = this.getEffectiveValue(option, option.validate(nextArg))
+
+		if (this.shouldIncludeNextIndex(validatedValue, nextArg)) {
+			indices.add(index + 1)
+		}
+
+		if (option.required && option.isEmptyValue(validatedValue)) {
+			throw new Error(`Option "${option.name}" requires a value`)
+		}
+
+		return validatedValue
+	}
 }
