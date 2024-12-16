@@ -1,27 +1,134 @@
 /**
- * Contains the parsed state of the CLI after processing arguments.
- * This is returned by the Cli.run() method.
- * @since 0.1.0
+ * Base configuration for commands and flags.
  */
-export interface CliData {
-	/** Map of option names to their parsed values */
-	options: Map<string, any>
-	/** Map of command names that were triggered */
-	commands: Set<string>
-	/** Error that occurred during parsing, if any */
-	error?: Error
+export interface BaseConfig {
+	name: string
+	flag?: string
+	alias?: string
+	description: string
 }
 
 /**
- * Internal interface representing the intermediate parsing state.
- * Used by the parser function to track commands, options and callbacks.
- * @internal
+ * The available types for flags.
  */
-export interface ParsedArgs {
-	/** Map of triggered command names */
-	commands: Set<string>
-	/** Map of parsed option values */
-	options: Map<string, any>
-	/** Set of callback functions to execute */
-	actions: Map<string, (data?: ParsedArgs) => void>
+export type FlagType = "string" | "boolean" | "number"
+
+/**
+ * Configuration interface for defining a flag.
+ */
+export interface FlagConfig extends Omit<BaseConfig, "flag"> {
+	flag: string // Make 'flag' required for flags
+	type: FlagType
+	default?: any
+}
+
+/**
+ * Configuration interface for defining a command.
+ */
+export interface CommandConfig extends BaseConfig {
+	commands?: Command[]
+	options?: Flag[]
+}
+
+/**
+ * Structure representing the usage information for a command.
+ */
+export interface CommandUsage {
+	name: string
+	description: string
+	commands?: CommandInfo[]
+	flags?: FlagInfo[]
+}
+
+/**
+ * Information about a command, used in help display.
+ */
+export interface CommandInfo extends BaseConfig {}
+
+/**
+ * Information about a flag, used in help display.
+ */
+export interface FlagInfo extends BaseConfig {
+	type: FlagType
+}
+
+/**
+ * Configuration for initializing the CLI.
+ */
+export interface CliConfig {
+	name: string
+	description: string
+	commands?: Command[]
+	options?: Flag[]
+}
+
+/**
+ * Specialized flag configuration for different types.
+ */
+export interface StringFlagConfig extends FlagConfig {
+	default?: string
+}
+
+export interface BooleanFlagConfig extends FlagConfig {
+	default?: boolean
+}
+
+export interface NumberFlagConfig extends FlagConfig {
+	default?: number
+}
+
+/**
+ * Abstract base class for flags.
+ */
+export abstract class Flag {
+	public readonly type: FlagType
+	public readonly name: string
+	public readonly flag: string // Now required
+	public readonly description: string
+	public readonly alias?: string
+	public readonly default?: any
+
+	constructor(config: FlagConfig) {
+		this.type = config.type
+		this.name = config.name
+		this.flag = config.flag
+		this.description = config.description
+		this.alias = config.alias
+		this.default = config.default
+	}
+
+	/**
+	 * Checks if the provided value is valid for this flag.
+	 * @param value The value to validate.
+	 * @returns True if valid, false otherwise.
+	 */
+	abstract isValid(value: unknown): boolean
+
+	/**
+	 * Converts the provided value to the appropriate type.
+	 * @param value The value to convert.
+	 * @returns The converted value.
+	 */
+	abstract convert(value: unknown): any
+}
+
+/**
+ * Class representing a command in the CLI.
+ */
+export class Command {
+	public readonly name: string
+	public readonly flag?: string
+	public readonly description: string
+	public readonly alias?: string
+	public readonly commands?: Command[]
+	public options?: Flag[]
+
+	constructor(config: CommandConfig) {
+		this.name = config.name
+		this.flag = config.flag
+		this.description = config.description
+		this.alias = config.alias
+		this.commands = config.commands
+		this.options = config.options
+	}
 }
