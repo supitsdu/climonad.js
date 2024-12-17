@@ -51,7 +51,7 @@ export namespace Parser {
 		}
 
 		_insertPath(parts: string[], value: T) {
-			if (!parts?.length) return // Guard against empty parts
+			if (!parts?.length) return
 			let node = this.root
 			if (!node) {
 				node = this.root = new Node<T>()
@@ -75,7 +75,7 @@ export namespace Parser {
 				this.cache.set(path, null)
 				return null
 			}
-			// Check cache first
+
 			if (this.cache.has(path)) {
 				return this.cache.get(path)!
 			}
@@ -96,7 +96,6 @@ export namespace Parser {
 			return result
 		}
 
-		// Check if a command or option exists in the tree
 		has(path: string): boolean {
 			return this.search(path) !== null
 		}
@@ -111,7 +110,7 @@ export namespace Parser {
 					if (cmd.alias) this.insert(cmd.alias, cmd)
 				})
 				command.options?.forEach(opt => {
-					this.insert(opt.flag, opt) // Use flag instead of name
+					this.insert(opt.flag, opt)
 					if (opt.alias) this.insert(opt.alias, opt)
 				})
 			}
