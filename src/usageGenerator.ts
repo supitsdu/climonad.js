@@ -111,6 +111,7 @@ export class UsageGenerator {
 			type: opt.type,
 			description: opt.description,
 			flag: opt.flag,
+			multiple: opt.multiple,
 		}))
 	}
 }

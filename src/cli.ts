@@ -80,14 +80,39 @@ export namespace Cli {
 
 			let scope: Parser.Scope | null = null
 			let currentCommand: Types.Command | null = this.rootCommand
+			let expectingValueFor: Types.Flag | null = null
 			let helpRequested = false
 			const seenFlags = new Set<string>()
 
 			for (let i = 0; i < args.length; i++) {
 				const arg = args[i]
+
+				// Check if we are expecting values for a flag that accepts multiple values
+				if (expectingValueFor) {
+					if (arg.startsWith("-")) {
+						// Next flag encountered, stop collecting values
+						expectingValueFor = null
+						// Fall through to process the new flag
+					} else {
+						// Collect value for multiple flag
+						if (!expectingValueFor.isValid(arg)) {
+							result.errors.set(expectingValueFor.name, `Invalid value for ${expectingValueFor.name}: ${arg}`)
+							continue
+						}
+						const convertedValue = expectingValueFor.convert(arg)
+						const valueList = result.options.get(expectingValueFor.name) || []
+						valueList.push(convertedValue)
+						result.options.set(expectingValueFor.name, valueList)
+						continue // Continue to next arg
+					}
+				}
+
 				const entry = scope?.search(arg) ?? this.tree.search(arg)
 
-				if (!entry) continue
+				if (!entry) {
+					result.errors.set(arg, `Unknown argument: ${arg}`)
+					continue
+				}
 
 				if (entry instanceof Types.Flag) {
 					seenFlags.add(entry.flag)
@@ -96,35 +121,43 @@ export namespace Cli {
 						break
 					}
 
-					let value: unknown
 					if (entry.type === "boolean") {
-						value = true
+						result.options.set(entry.name, true)
 					} else {
-						const nextArg = args[i + 1]
-						if (!nextArg || nextArg.startsWith("-")) {
-							value =
-								entry.default ??
-								(() => {
-									result.errors.set(entry.name, `Missing value for ${entry.name}`)
-									return
-								})()
+						if (entry.multiple) {
+							// Start collecting multiple values
+							expectingValueFor = entry
+							result.options.set(entry.name, [])
 						} else {
-							value = nextArg
-							i++
+							const nextArg = args[i + 1]
+							if (!nextArg || nextArg.startsWith("-")) {
+								if (entry.default !== undefined) {
+									result.options.set(entry.name, entry.default)
+								} else {
+									result.errors.set(entry.name, `Missing value for ${entry.name}`)
+								}
+							} else {
+								if (!entry.isValid(nextArg)) {
+									result.errors.set(entry.name, `Invalid value for ${entry.name}: ${nextArg}`)
+								} else {
+									const convertedValue = entry.convert(nextArg)
+									result.options.set(entry.name, convertedValue)
+								}
+								i++
+							}
 						}
 					}
-
-					if (!entry.isValid(value)) {
-						result.errors.set(entry.name, `Invalid value for ${entry.name}: ${value}`)
-						continue
-					}
-
-					result.options.set(entry.name, entry.convert(value))
 				} else if (entry instanceof Types.Command) {
 					result.commands.add(arg)
 					currentCommand = entry
 					scope = this.scope(arg)
 				}
+			}
+
+			// If still expecting values for a multiple flag at the end of args
+			if (expectingValueFor) {
+				// No more args to process
+				expectingValueFor = null
 			}
 
 			this.applyDefaultValues(result, currentCommand, seenFlags)

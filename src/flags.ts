@@ -11,10 +11,16 @@ export namespace Flags {
 		}
 
 		isValid(value: unknown): boolean {
+			if (this.multiple && Array.isArray(value)) {
+				return value.every(v => (this.validator ? this.validator(v) : true))
+			}
 			return this.validator ? this.validator(value) : true
 		}
 
-		convert(value: unknown): T {
+		convert(value: unknown): T | T[] {
+			if (this.multiple && Array.isArray(value)) {
+				return value.map(v => this.converter(v))
+			}
 			return this.converter(value)
 		}
 	}

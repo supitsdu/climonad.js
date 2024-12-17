@@ -17,9 +17,10 @@ export type FlagType = "string" | "boolean" | "number"
  * Configuration interface for defining a flag.
  */
 export interface FlagConfig extends Omit<BaseConfig, "flag"> {
-	flag: string // Make 'flag' required for flags
-	type: FlagType
+	flag: string
+	type?: FlagType
 	default?: any
+	multiple?: boolean
 }
 
 /**
@@ -83,18 +84,20 @@ export interface NumberFlagConfig extends FlagConfig {
 export abstract class Flag {
 	public readonly type: FlagType
 	public readonly name: string
-	public readonly flag: string // Now required
+	public readonly flag: string
 	public readonly description: string
 	public readonly alias?: string
 	public readonly default?: any
+	public readonly multiple?: boolean
 
 	constructor(config: FlagConfig) {
-		this.type = config.type
+		this.type = config.type || "string"
 		this.name = config.name
 		this.flag = config.flag
 		this.description = config.description
 		this.alias = config.alias
 		this.default = config.default
+		this.multiple = config.multiple
 	}
 
 	/**
