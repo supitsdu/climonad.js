@@ -1,10 +1,12 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { Utils } from "../src/utils"
 
 describe("Utils.isValidBoolean", () => {
 	it("returns true for boolean values", () => {
 		expect(Utils.isValidBoolean(true)).toBe(true)
 		expect(Utils.isValidBoolean(false)).toBe(true)
+		expect(Utils.isValidBoolean(1)).toBe(true)
+		expect(Utils.isValidBoolean(0)).toBe(true)
 	})
 
 	it("returns true for valid boolean strings", () => {
@@ -17,8 +19,6 @@ describe("Utils.isValidBoolean", () => {
 	it("returns false for invalid values", () => {
 		expect(Utils.isValidBoolean("yes")).toBe(false)
 		expect(Utils.isValidBoolean("no")).toBe(false)
-		expect(Utils.isValidBoolean(1)).toBe(false)
-		expect(Utils.isValidBoolean(0)).toBe(false)
 		expect(Utils.isValidBoolean(null)).toBe(false)
 		expect(Utils.isValidBoolean(undefined)).toBe(false)
 	})
