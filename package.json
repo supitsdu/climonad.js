@@ -33,7 +33,19 @@
     "url": "git+https://github.com/supitsdu/climonad.js.git"
   },
   "keywords": [
-    "cli"
+    "cli",
+    "command-line",
+    "arguments",
+    "parser",
+    "high-performance",
+    "nodejs",
+    "typescript",
+    "commander",
+    "options",
+    "flags",
+    "terminal",
+    "command",
+    "argv"
   ],
   "author": "Eduardo M. Santos <contact@supitsdu.me>",
   "license": "MIT",
