@@ -1,5 +1,5 @@
-import type * as Types from "./types"
 import { Flags } from "./flags"
+import type * as Types from "./types"
 import { Utils } from "./utils"
 
 export class UsageGenerator {

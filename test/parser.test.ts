@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
+import { Cli } from "../src/cli"
 import { Parser } from "../src/parser"
 import { Command, Flag } from "../src/types"
-import { Cli } from "../src/cli"
 
 describe("Parser.Node", () => {
 	it("should create an empty node", () => {

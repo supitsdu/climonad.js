@@ -1,6 +1,6 @@
+import { Flags } from "./flags"
 import { Parser } from "./parser"
 import * as Types from "./types"
-import { Flags } from "./flags"
 import { UsageGenerator } from "./usageGenerator"
 import { Utils } from "./utils"
 
