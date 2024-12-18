@@ -4,11 +4,18 @@ import * as Types from "./types"
 import { UsageGenerator } from "./usageGenerator"
 import { Utils } from "./utils"
 
+export class CliError extends Error {
+	constructor(
+		message: string,
+		public code?: string,
+	) {
+		super(message)
+		this.name = "CliError"
+	}
+}
+
 export namespace Cli {
 	export namespace Core {
-		export type Flag = Types.Flag
-		export type Command = Types.Command
-
 		export interface ParseResult {
 			/**
 			 * Set of commands parsed from the input arguments.
@@ -19,11 +26,6 @@ export namespace Cli {
 			 * Map of option names to their parsed values.
 			 */
 			options: Map<string, any>
-
-			/**
-			 * Map of errors encountered during parsing, keyed by option name.
-			 */
-			errors: Map<string, string>
 
 			/**
 			 * Generates a help message for the current command.
@@ -74,90 +76,69 @@ export namespace Cli {
 			const result: Core.ParseResult = {
 				commands: new Set<string>(),
 				options: new Map<string, any>(),
-				errors: new Map<string, string>(),
 				generateHelp: () => null,
 			}
 
 			let scope: Parser.Scope | null = null
 			let currentCommand: Types.Command | null = this.rootCommand
-			let expectingValueFor: Types.Flag | null = null
 			let helpRequested = false
 			const seenFlags = new Set<string>()
 
 			for (let i = 0; i < args.length; i++) {
 				const arg = args[i]
 
-				// Check if we are expecting values for a flag that accepts multiple values
-				if (expectingValueFor) {
-					if (arg.startsWith("-")) {
-						// Next flag encountered, stop collecting values
-						expectingValueFor = null
-						// Fall through to process the new flag
-					} else {
-						// Collect value for multiple flag
-						if (!expectingValueFor.isValid(arg)) {
-							result.errors.set(expectingValueFor.name, `Invalid value for ${expectingValueFor.name}: ${arg}`)
-							continue
-						}
-						const convertedValue = expectingValueFor.convert(arg)
-						const valueList = result.options.get(expectingValueFor.name) || []
-						valueList.push(convertedValue)
-						result.options.set(expectingValueFor.name, valueList)
-						continue // Continue to next arg
-					}
-				}
-
 				const entry = scope?.search(arg) ?? this.tree.search(arg)
 
 				if (!entry) {
-					result.errors.set(arg, `Unknown argument: ${arg}`)
-					continue
+					throw new CliError(
+						`Unknown argument '${arg}'. Use '--help' to see available commands and options.`,
+						"UNKNOWN_ARGUMENT",
+					)
 				}
 
-				if (entry instanceof Types.Flag) {
+				if (entry instanceof Types.Command) {
+					result.commands.add(arg)
+					currentCommand = entry
+					scope = this.scope(arg)
+				} else if (entry instanceof Types.Flag) {
 					seenFlags.add(entry.flag)
 					if (entry === this.helpOption) {
 						helpRequested = true
 						break
 					}
 
-					if (entry.type === "boolean") {
-						result.options.set(entry.name, true)
-					} else {
-						if (entry.multiple) {
-							// Start collecting multiple values
-							expectingValueFor = entry
-							result.options.set(entry.name, [])
-						} else {
-							const nextArg = args[i + 1]
-							if (!nextArg || nextArg.startsWith("-")) {
-								if (entry.default !== undefined) {
-									result.options.set(entry.name, entry.default)
-								} else {
-									result.errors.set(entry.name, `Missing value for ${entry.name}`)
-								}
-							} else {
-								if (!entry.isValid(nextArg)) {
-									result.errors.set(entry.name, `Invalid value for ${entry.name}: ${nextArg}`)
-								} else {
-									const convertedValue = entry.convert(nextArg)
-									result.options.set(entry.name, convertedValue)
-								}
-								i++
-							}
+					const values = []
+					while (args[i + 1] && !args[i + 1].startsWith("-")) {
+						i++
+						const nextArg = args[i]
+						if (!entry.isValid(nextArg)) {
+							throw new CliError(
+								`Invalid value '${nextArg}' for option '${entry.name}'. Expected type: ${entry.type}.`,
+								"INVALID_OPTION_VALUE",
+							)
+						}
+						values.push(entry.convert(nextArg))
+						if (!entry.multiple) {
+							break
 						}
 					}
-				} else if (entry instanceof Types.Command) {
-					result.commands.add(arg)
-					currentCommand = entry
-					scope = this.scope(arg)
-				}
-			}
 
-			// If still expecting values for a multiple flag at the end of args
-			if (expectingValueFor) {
-				// No more args to process
-				expectingValueFor = null
+					if (values.length === 0) {
+						if (entry.default !== undefined) {
+							result.options.set(entry.name, entry.default)
+						} else if (entry.type === "boolean") {
+							result.options.set(entry.name, true)
+						} else {
+							throw new CliError(
+								`Missing value for option '${entry.name}'. Expected type: ${entry.type}.`,
+								"MISSING_OPTION_VALUE",
+							)
+						}
+					} else {
+						const value = entry.multiple ? values : values[0]
+						result.options.set(entry.name, value)
+					}
+				}
 			}
 
 			this.applyDefaultValues(result, currentCommand, seenFlags)
