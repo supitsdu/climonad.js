@@ -1,66 +1,130 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import { Bool, Cli, Cmd } from "../src/main"
+import { describe, expect, it } from "vitest"
+import { Cli, CliError } from "../src/cli"
 
-describe("Cli", () => {
-	const mockAction = vi.fn()
-	const cli = new Cli({
-		name: "my-cli",
-		description: "My awesome CLI",
-		commands: [
-			new Cmd({
-				name: "hello",
-				alias: "h",
-				description: "Say hello",
-				fn: mockAction,
-			}),
-		],
-		options: [
-			new Bool({
-				name: "loud",
-				alias: "l",
-				defaultValue: true,
-				description: "Say hello loudly",
-			}),
-		],
+describe("Cli.Setup", () => {
+	it("should create a CLI with basic configuration", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+		})
+		expect(cli).toBeInstanceOf(Cli.Setup)
 	})
 
-	beforeEach(() => {
-		mockAction.mockClear()
+	describe("Command Parsing", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+			commands: [
+				Cli.cmd({
+					name: "serve",
+					description: "Start server",
+					alias: "s",
+				}),
+				Cli.cmd({
+					name: "build",
+					description: "Build project",
+				}),
+			],
+		})
+
+		it("should parse simple command", () => {
+			const result = cli.parse(["serve"])
+			expect(result.commands.has("serve")).toBe(true)
+		})
+
+		it("should parse command alias", () => {
+			const result = cli.parse(["s"])
+			expect(result.commands.has("s")).toBe(true)
+		})
 	})
 
-	it("should execute command with full name", () => {
-		const result = cli.run(["hello"])
-		expect(mockAction).toHaveBeenCalledTimes(1)
-		expect(result.commands?.get("hello")).toBeTruthy()
+	describe("Flag Parsing", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+			options: [
+				Cli.str({ name: "host", flag: "--host", description: "Host name" }),
+				Cli.num({ name: "port", flag: "--port", description: "Port number" }),
+				Cli.bool({ name: "verbose", flag: "--verbose", description: "Verbose mode" }),
+			],
+		})
+
+		it("should parse string flag correctly", () => {
+			const result = cli.parse(["--host", "localhost"])
+			expect(result.options.get("host")).toBe("localhost")
+		})
+
+		it("should parse number flag correctly", () => {
+			const result = cli.parse(["--port", "3000"])
+			expect(result.options.get("port")).toBe(3000)
+		})
+
+		it("should parse boolean flag correctly", () => {
+			const result = cli.parse(["--verbose"])
+			expect(result.options.get("verbose")).toBe(true)
+		})
 	})
 
-	it("should execute command with alias", () => {
-		const result = cli.run(["h"])
-		expect(mockAction).toHaveBeenCalledTimes(1)
-		expect(result.commands?.get("hello")).toBeTruthy()
+	describe("Error Handling", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+			options: [Cli.num({ name: "port", flag: "--port", description: "Port number" })],
+		})
+
+		it("should throw an error on unknown argument", () => {
+			expect(() => cli.parse(["--unknown"])).toThrow(CliError)
+		})
+
+		it("should throw an error on invalid number value", () => {
+			expect(() => cli.parse(["--port", "invalid"])).toThrow(CliError)
+		})
 	})
 
-	it("should parse boolean option with full name", () => {
-		const result = cli.run(["hello", "--loud"])
-		expect(result.options.get("loud")).toBe(true)
-		expect(mockAction).toHaveBeenCalledTimes(1)
+	describe("Help Generation", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+			commands: [
+				Cli.cmd({
+					name: "serve",
+					description: "Start server",
+				}),
+			],
+		})
+
+		it("should generate help when --help is used", () => {
+			const result = cli.parse(["--help"])
+			const help = result.generateHelp()
+			expect(help).toBeTruthy()
+			expect(help?.name).toBe("test-cli")
+		})
+
+		it("should generate command-specific help", () => {
+			const result = cli.parse(["serve", "--help"])
+			const help = result.generateHelp()
+			expect(help).toBeTruthy()
+			expect(help?.name).toBe("serve")
+		})
 	})
 
-	it("should parse boolean option with alias", () => {
-		const result = cli.run(["hello", "-l"])
-		expect(result.options.get("loud")).toBe(true)
-		expect(mockAction).toHaveBeenCalledTimes(1)
-	})
+	describe("Default Values", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+			options: [
+				Cli.str({
+					name: "env",
+					flag: "--env",
+					description: "Environment",
+					default: "development",
+				}),
+			],
+		})
 
-	it("should handle invalid command", () => {
-		const result = cli.run(["invalid"])
-		expect(result.error).toBeDefined()
-		expect(mockAction).not.toHaveBeenCalled()
-	})
-
-	it("should handle invalid option", () => {
-		const result = cli.run(["hello", "--invalid"])
-		expect(result.error).toBeDefined()
-		expect(mockAction).not.toHaveBeenCalled()
+		it("should use default value when flag is not provided", () => {
+			const result = cli.parse([])
+			expect(result.options.get("env")).toBe("development")
+		})
 	})
 })

@@ -1,49 +1,137 @@
 /**
- * Configuration object for defining command line options.
- * Used when creating new option instances like Bool, Str, or Num.
- * @since 0.1.0
+ * Base configuration for commands and flags.
  */
-export interface OptionConfig {
-	/** Full name of the option (e.g., "verbose" for --verbose) */
+export interface BaseConfig {
 	name: string
-	/** Single character alias (e.g., "v" for -v) */
-	alias: string
-	/** Description displayed in help text */
+	flag?: string
+	alias?: string
 	description: string
-	/** Default value if option is not provided */
-	defaultValue?: any
-	/** Whether the option must be provided */
-	required?: boolean
-	/** Callback function executed when option is used */
-	fn?: (data: CliData) => void
-	/** Number of values expected for this option */
-	totalValues?: number
 }
 
 /**
- * Contains the parsed state of the CLI after processing arguments.
- * This is returned by the Cli.run() method.
- * @since 0.1.0
+ * The available types for flags.
  */
-export interface CliData {
-	/** Map of option names to their parsed values */
-	options: Map<string, any>
-	/** Map of command names that were triggered */
-	commands: Map<string, boolean>
-	/** Error that occurred during parsing, if any */
-	error?: Error
+export type FlagType = "string" | "boolean" | "number"
+
+/**
+ * Configuration interface for defining a flag.
+ */
+export interface FlagConfig extends Omit<BaseConfig, "flag"> {
+	flag: string
+	type?: FlagType
+	default?: any
+	multiple?: boolean
 }
 
 /**
- * Internal interface representing the intermediate parsing state.
- * Used by the parser function to track commands, options and callbacks.
- * @internal
+ * Configuration interface for defining a command.
  */
-export interface ParsedArgs {
-	/** Map of triggered command names */
-	command: Map<string, boolean>
-	/** Map of parsed option values */
-	options: Map<string, any>
-	/** Set of callback functions to execute */
-	callstack: Set<(data: CliData) => void>
+export interface CommandConfig extends BaseConfig {
+	commands?: Command[]
+	options?: Flag[]
+}
+
+/**
+ * Structure representing the usage information for a command.
+ */
+export interface CommandUsage {
+	name: string
+	description: string
+	commands?: CommandInfo[]
+	flags?: FlagInfo[]
+}
+
+/**
+ * Information about a command, used in help display.
+ */
+export interface CommandInfo extends BaseConfig {}
+
+/**
+ * Information about a flag, used in help display.
+ */
+export interface FlagInfo extends BaseConfig {
+	type: FlagType
+}
+
+/**
+ * Configuration for initializing the CLI.
+ */
+export interface CliConfig {
+	name: string
+	description: string
+	commands?: Command[]
+	options?: Flag[]
+}
+
+/**
+ * Specialized flag configuration for different types.
+ */
+export interface StringFlagConfig extends FlagConfig {
+	default?: string
+}
+
+export interface BooleanFlagConfig extends FlagConfig {
+	default?: boolean
+}
+
+export interface NumberFlagConfig extends FlagConfig {
+	default?: number
+}
+
+/**
+ * Abstract base class for flags.
+ */
+export abstract class Flag {
+	public readonly type: FlagType
+	public readonly name: string
+	public readonly flag: string
+	public readonly description: string
+	public readonly alias?: string
+	public readonly default?: any
+	public readonly multiple?: boolean
+
+	constructor(config: FlagConfig) {
+		this.type = config.type || "string"
+		this.name = config.name
+		this.flag = config.flag
+		this.description = config.description
+		this.alias = config.alias
+		this.default = config.default
+		this.multiple = config.multiple
+	}
+
+	/**
+	 * Checks if the provided value is valid for this flag.
+	 * @param value The value to validate.
+	 * @returns True if valid, false otherwise.
+	 */
+	abstract isValid(value: unknown): boolean
+
+	/**
+	 * Converts the provided value to the appropriate type.
+	 * @param value The value to convert.
+	 * @returns The converted value.
+	 */
+	abstract convert(value: unknown): any
+}
+
+/**
+ * Class representing a command in the CLI.
+ */
+export class Command {
+	public readonly name: string
+	public readonly flag?: string
+	public readonly description: string
+	public readonly alias?: string
+	public readonly commands?: Command[]
+	public options?: Flag[]
+
+	constructor(config: CommandConfig) {
+		this.name = config.name
+		this.flag = config.flag
+		this.description = config.description
+		this.alias = config.alias
+		this.commands = config.commands
+		this.options = config.options
+	}
 }

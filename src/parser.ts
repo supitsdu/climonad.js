@@ -1,84 +1,119 @@
-import type { Cmd } from "./commands"
-import type { Option } from "./options"
-import type { ParsedArgs } from "./types"
+import type * as Types from "./types"
 
-/**
- * Parses command line arguments into a structured format.
- *
- * @internal This function is not intended to be used directly by consumers.
- * @param args Array of command line argument strings to parse
- * @param options Configuration object containing valid options and commands
- * @since v0.1.0
- */
-export function parser(
-	args: string[],
-	{ options, commands }: { options: Map<string, Option>; commands: Map<string, Cmd> },
-): ParsedArgs {
-	const data: ParsedArgs = {
-		command: new Map(),
-		options: new Map(),
-		callstack: new Set(),
+export namespace Parser {
+	/**
+	 * Represents a node in the parsing tree.
+	 * @template T The type of value stored in the node.
+	 */
+	export class Node<T> {
+		children: Map<string, Node<T>>
+		value: T | null
+
+		constructor() {
+			this.children = new Map()
+			this.value = null
+		}
 	}
 
-	const usedIndices = new Set<number>()
+	/**
+	 * Represents a tree structure used for parsing commands and options.
+	 * @template T The type of values stored in the tree nodes.
+	 */
+	export class Tree<T> {
+		root: Node<T>
+		cache: Map<string, T | null>
 
-	for (let i = 0; i < args.length; i++) {
-		if (usedIndices.has(i)) continue
+		constructor() {
+			this.root = new Node<T>()
+			this.cache = new Map()
+		}
 
-		const currentArg = args[i]
-		const equalSignIndex = currentArg.indexOf("=")
-		const argName = equalSignIndex > -1 ? currentArg.slice(0, equalSignIndex) : currentArg
-		const option = options.get(argName)
-
-		if (option) {
-			if (data.options.has(option.name)) {
-				throw new Error(`Duplicate option: ${option.name}`)
+		/**
+		 * Inserts a path and associated value into the tree.
+		 * @param path The path string to insert.
+		 * @param value The value associated with the path.
+		 */
+		insert(path: string, value: T) {
+			if (!path) return
+			const paths = [path, (value as any).alias].filter(Boolean) as string[]
+			for (const p of paths) {
+				const parts = p.split(" ")
+				this._insertPath(parts, value)
 			}
+			this.clearCache()
+		}
 
-			let optionValue: string | undefined
+		/**
+		 * Clears the cache of search results.
+		 */
+		clearCache() {
+			this.cache.clear()
+		}
 
-			if (equalSignIndex > -1) {
-				optionValue = currentArg.slice(equalSignIndex + 1)
-			} else {
-				const nextArg = args[i + 1]
-				if (nextArg && !nextArg.startsWith("-")) {
-					optionValue = nextArg
-					usedIndices.add(i + 1)
-					i++
+		_insertPath(parts: string[], value: T) {
+			if (!parts?.length) return
+			let node = this.root
+			if (!node) {
+				node = this.root = new Node<T>()
+			}
+			for (const part of parts) {
+				if (!node.children.has(part)) {
+					node.children.set(part, new Node())
 				}
+				node = node.children.get(part)!
 			}
-
-			data.options.set(option.name, option.parse(optionValue))
-			if (typeof option?.fn === "function") data.callstack.add(option.fn)
-			continue
+			node.value = value
 		}
 
-		const command = commands.get(argName)
-		if (command && !usedIndices.has(i)) {
-			if (data.command.has(command.name)) {
-				throw new Error(`Duplicate command: ${command.name}`)
+		/**
+		 * Searches for a value associated with a given path.
+		 * @param path The path string to search for.
+		 * @returns The value associated with the path, or null if not found.
+		 */
+		search(path: string): T | null {
+			if (!this.root) {
+				this.cache.set(path, null)
+				return null
 			}
 
-			if (typeof command?.fn === "function") data.callstack.add(command.fn)
+			if (this.cache.has(path)) {
+				return this.cache.get(path)!
+			}
 
-			data.command.set(command.name, true)
-			continue
+			let node = this.root
+			const parts = path?.split(" ")
+
+			for (const part of parts) {
+				if (!node.children.has(part)) {
+					this.cache.set(path, null)
+					return null
+				}
+				node = node.children.get(part)!
+			}
+
+			const result = node.value
+			this.cache.set(path, result)
+			return result
 		}
 
-		if (!usedIndices.has(i)) {
-			throw new Error(`Invalid argument: ${argName}`)
+		has(path: string): boolean {
+			return this.search(path) !== null
 		}
 	}
 
-	for (const [_, option] of options) {
-		if (option.required && !data.options.has(option.name)) {
-			throw new Error(`Missing required option: ${option.name}`)
-		}
-
-		if (!data.options.has(option.name) && "defaultOption" in option) {
-			data.options.set(option.name, option.parse(option.defaultValue))
+	export class Scope extends Tree<Types.Command | Types.Flag> {
+		constructor(command: Types.Command | null) {
+			super()
+			if (command) {
+				command.commands?.forEach(cmd => {
+					this.insert(cmd.name, cmd)
+					if (cmd.alias) this.insert(cmd.alias, cmd)
+				})
+				command.options?.forEach(opt => {
+					this.insert(opt.flag, opt)
+					if (opt.alias) this.insert(opt.alias, opt)
+				})
+			}
 		}
 	}
-
-	return data
 }
