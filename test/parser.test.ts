@@ -70,7 +70,7 @@ describe("Parser.Scope", () => {
 		expect(scope.search("-i")).toBeInstanceOf(Flag)
 	})
 
-	it("should handle null command", () => {
+	it("should handle null command gracefully", () => {
 		const scope = new Parser.Scope(null)
 		expect(scope.search("anything")).toBeNull()
 	})
@@ -88,7 +88,7 @@ describe("Parser.Scope", () => {
 	})
 })
 
-describe("Parser integration tests", () => {
+describe("Parser Integration Tests", () => {
 	it("should work with CLI-like command structure", () => {
 		const tree = new Parser.Tree<Command | Flag>()
 

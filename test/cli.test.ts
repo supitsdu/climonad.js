@@ -1,8 +1,7 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { Cli, CliError } from "../src/cli"
 
 describe("Cli.Setup", () => {
-	// Basic setup test
 	it("should create a CLI with basic configuration", () => {
 		const cli = Cli.createCli({
 			name: "test-cli",
@@ -11,8 +10,7 @@ describe("Cli.Setup", () => {
 		expect(cli).toBeInstanceOf(Cli.Setup)
 	})
 
-	// Command parsing tests
-	describe("command parsing", () => {
+	describe("Command Parsing", () => {
 		const cli = Cli.createCli({
 			name: "test-cli",
 			description: "Test CLI",
@@ -40,8 +38,7 @@ describe("Cli.Setup", () => {
 		})
 	})
 
-	// Flag parsing tests
-	describe("flag parsing", () => {
+	describe("Flag Parsing", () => {
 		const cli = Cli.createCli({
 			name: "test-cli",
 			description: "Test CLI",
@@ -52,41 +49,39 @@ describe("Cli.Setup", () => {
 			],
 		})
 
-		it("should parse string flag", () => {
+		it("should parse string flag correctly", () => {
 			const result = cli.parse(["--host", "localhost"])
 			expect(result.options.get("host")).toBe("localhost")
 		})
 
-		it("should parse number flag", () => {
+		it("should parse number flag correctly", () => {
 			const result = cli.parse(["--port", "3000"])
 			expect(result.options.get("port")).toBe(3000)
 		})
 
-		it("should parse boolean flag", () => {
+		it("should parse boolean flag correctly", () => {
 			const result = cli.parse(["--verbose"])
 			expect(result.options.get("verbose")).toBe(true)
 		})
 	})
 
-	// Error handling tests
-	describe("error handling", () => {
+	describe("Error Handling", () => {
 		const cli = Cli.createCli({
 			name: "test-cli",
 			description: "Test CLI",
 			options: [Cli.num({ name: "port", flag: "--port", description: "Port number" })],
 		})
 
-		it("should throw on unknown argument", () => {
+		it("should throw an error on unknown argument", () => {
 			expect(() => cli.parse(["--unknown"])).toThrow(CliError)
 		})
 
-		it("should throw on invalid number value", () => {
+		it("should throw an error on invalid number value", () => {
 			expect(() => cli.parse(["--port", "invalid"])).toThrow(CliError)
 		})
 	})
 
-	// Help generation tests
-	describe("help generation", () => {
+	describe("Help Generation", () => {
 		const cli = Cli.createCli({
 			name: "test-cli",
 			description: "Test CLI",
@@ -113,8 +108,7 @@ describe("Cli.Setup", () => {
 		})
 	})
 
-	// Default values tests
-	describe("default values", () => {
+	describe("Default Values", () => {
 		const cli = Cli.createCli({
 			name: "test-cli",
 			description: "Test CLI",

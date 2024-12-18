@@ -29,7 +29,7 @@ describe("Flag", () => {
 		expect(flag.multiple).toBeUndefined()
 	})
 
-	it("should create a flag with all properties", () => {
+	it("should create a flag with all properties set", () => {
 		const config: FlagConfig = {
 			name: "test",
 			flag: "--test",
@@ -67,7 +67,7 @@ describe("Command", () => {
 		expect(command.options).toBeUndefined()
 	})
 
-	it("should create a command with all properties", () => {
+	it("should create a command with all properties set", () => {
 		const subCommand = new Command({
 			name: "sub",
 			description: "sub command",

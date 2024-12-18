@@ -61,7 +61,7 @@ describe("UsageGenerator", () => {
 			expect(usage.flags![0].name).toBe("--help, -h")
 		})
 
-		it("should generate command help for specific command", () => {
+		it("should generate command help for a specific command", () => {
 			const subcommand = rootCommand.commands![0]
 			const usage = generator.generate(subcommand, ["cli", "subcommand"])
 
