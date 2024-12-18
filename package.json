@@ -23,7 +23,9 @@
     "test": "vitest -c vitest.config.ts",
     "lint": "biome ci",
     "lint:fix": "biome check --write",
-    "format": "prettier --write *.md"
+    "format": "prettier --write *.md",
+    "prebench": "npm run build",
+    "bench": "deno bench test/bench.ts"
   },
   "repository": {
     "type": "git",
