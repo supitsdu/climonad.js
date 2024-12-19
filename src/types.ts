@@ -21,6 +21,7 @@ export interface FlagConfig extends Omit<BaseConfig, "flag"> {
 	type?: FlagType
 	default?: any
 	multiple?: boolean
+	required?: boolean
 }
 
 /**
@@ -89,6 +90,7 @@ export abstract class Flag {
 	public readonly alias?: string
 	public readonly default?: any
 	public readonly multiple?: boolean
+	public readonly required?: boolean
 
 	constructor(config: FlagConfig) {
 		this.type = config.type || "string"
@@ -98,6 +100,7 @@ export abstract class Flag {
 		this.alias = config.alias
 		this.default = config.default
 		this.multiple = config.multiple
+		this.required = config.required
 	}
 
 	/**
