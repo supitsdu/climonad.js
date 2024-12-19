@@ -141,7 +141,7 @@ export namespace Cli {
 				}
 			}
 
-			this.applyDefaultValues(result, currentCommand, seenFlags)
+			this.postProcess(result, currentCommand)
 
 			result.generateHelp = () =>
 				helpRequested ? this.usageGenerator.generate(currentCommand, Array.from(result.commands)) : null
@@ -150,16 +150,25 @@ export namespace Cli {
 		}
 
 		/**
-		 * Applies default values to flags that were not provided.
+		 * Post-processes the parsed results by applying default values and validating required flags.
 		 * @param result - The ParseResult object to update.
 		 * @param currentCommand - The current command being processed.
-		 * @param seenFlags - The set of flags that have been encountered.
 		 */
-		private applyDefaultValues(result: Core.ParseResult, currentCommand: Types.Command | null, seenFlags: Set<string>) {
+		private postProcess(result: Core.ParseResult, currentCommand: Types.Command | null) {
 			const allFlags = [...(currentCommand?.options || []), ...this.globalOptions]
+
 			for (const flag of allFlags) {
-				if (!seenFlags.has(flag.flag) && flag.default !== undefined) {
+				const isFlagPresent = result.options.has(flag.name)
+				const hasDefaultValue = flag.default !== undefined
+
+				if (!isFlagPresent && hasDefaultValue) {
 					result.options.set(flag.name, flag.default)
+				}
+
+				const isFlagRequired = flag.required === true
+
+				if (isFlagRequired && !result.options.has(flag.name)) {
+					throw new CliError(`Missing required option '${flag.name}'.`, "MISSING_REQUIRED_OPTION")
 				}
 			}
 		}

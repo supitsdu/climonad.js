@@ -127,4 +127,54 @@ describe("Cli.Setup", () => {
 			expect(result.options.get("env")).toBe("development")
 		})
 	})
+
+	describe("Required Flags", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+			options: [
+				Cli.str({
+					name: "config",
+					flag: "--config",
+					description: "Configuration file",
+					required: true,
+				}),
+			],
+		})
+
+		it("should parse required flag when provided", () => {
+			const result = cli.parse(["--config", "app.config"])
+			expect(result.options.get("config")).toBe("app.config")
+		})
+
+		it("should throw an error when required flag is missing", () => {
+			expect(() => cli.parse([])).toThrow(CliError)
+		})
+	})
+
+	describe("Required Flags with Default Values", () => {
+		const cli = Cli.createCli({
+			name: "test-cli",
+			description: "Test CLI",
+			options: [
+				Cli.str({
+					name: "config",
+					flag: "--config",
+					description: "Configuration file",
+					required: true,
+					default: "default.config",
+				}),
+			],
+		})
+
+		it("should use default value when required flag is not provided", () => {
+			const result = cli.parse([])
+			expect(result.options.get("config")).toBe("default.config")
+		})
+
+		it("should use provided value over default for required flag", () => {
+			const result = cli.parse(["--config", "user.config"])
+			expect(result.options.get("config")).toBe("user.config")
+		})
+	})
 })
