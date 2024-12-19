@@ -152,7 +152,8 @@ Climonad includes robust error handling:
 
 ## Performance
 
-> **Note:** Metrics are preliminary and subject to change as the library evolves.
+> [!NOTE]
+> Metrics are preliminary and subject to change as the library evolves.
 
 Benchmarks conducted using **Deno's [`bench`](https://docs.deno.com/api/deno/~/Deno.bench)**:
 
