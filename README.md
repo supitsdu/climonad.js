@@ -187,7 +187,7 @@ Climonad is now highly efficient for both small scripts and large CLI applicatio
 
 ## Contributing 🤝
 
-[We love contributions!](/CONTRIBUTING_GUIDE.md) Here’s how you can help:
+[We love contributions!](/CONTRIBUTING.md) Here’s how you can help:
 
 1. 🐛 **Report Bugs**: Found a bug? [Open an issue](https://github.com/supitsdu/climonad/issues).
 2. 💡 **Suggest Features**: Got an idea? Let us know by opening an issue.
