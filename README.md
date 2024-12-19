@@ -1,26 +1,16 @@
 # Climonad.js
 
-> ⚠️ This library is in **early development**. APIs may change without notice.
+> [!WARNING]
+> This library is in **early development**, and APIs may change without notice.
 
 **A high-performance, low-overhead library for building modern command-line interfaces in Node.js.**
 
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Argument Parsing and Handling](#argument-parsing-and-handling)
-- [Performance](#performance)
-- [API Reference](#api-reference)
-- [Contributing](#contributing)
-- [License](#license)
-
 ## Features
 
-- ⚡ **High-Performance**: Lightning-fast CLI argument parsing
-- 🌈 **Flexible**: Easy-to-define commands and options
-- 🔧 **Extensible**: Lightweight, modular architecture with a simple API
-- 💪 **Powerful**: Support for aliases, flags, and custom options
+- **High-Performance**: Lightning-fast CLI argument parsing
+- **Flexible**: Easy-to-define commands and options
+- **Extensible**: Lightweight, modular architecture with a simple API
+- **Powerful**: Support for aliases, flags, and custom options
 
 ## Quick Start
 
@@ -29,19 +19,14 @@
 ```javascript
 import { Cli } from "climonad"
 
-const cli = new Cli({
+const cli = Cli.createCli({
   name: "my-app",
   description: "A powerful CLI application",
-  // Global Commands:
   commands: [
-    Cli.cmd({
-      name: "init",
-      description: "Initialize the project",
-    }),
+    Cli.cmd({ name: "init", description: "Initialize the project" }),
     Cli.cmd({
       name: "build",
       description: "Build the project",
-      // Command Scoped Options:
       options: [
         Cli.str({
           name: "output",
@@ -52,8 +37,13 @@ const cli = new Cli({
       ],
     }),
   ],
-  // Global Options:
-  options: [Cli.bool({ name: "verboseOption", flag: "--verbose", description: "Enable verbose output" })],
+  options: [
+    Cli.bool({
+      name: "verboseOption",
+      flag: "--verbose",
+      description: "Enable verbose output",
+    }),
+  ],
 })
 
 cli.run(process.argv.slice(2))
@@ -61,21 +51,17 @@ cli.run(process.argv.slice(2))
 
 ## Argument Parsing and Handling
 
-Climonad uses a declarative configuration approach to define and parse CLI arguments. Here's how it works:
+Climonad uses declarative configuration to define and parse CLI arguments:
 
 ### Commands
 
-Commands represent distinct actions or functionalities. For example, "build" or "serve". You define commands using `Cli.cmd()` and assign them descriptions, aliases, and options. During runtime, Climonad identifies the invoked command based on the first positional argument:
+Commands represent distinct functionalities, like "build" or "serve." Define them using `Cli.cmd()` and assign descriptions, aliases, and options. For example:
 
 ```javascript
-Cli.cmd({
-  name: "serve",
-  description: "Start the development server",
-  alias: "s",
-})
+Cli.cmd({ name: "serve", description: "Start the development server", alias: "s" })
 ```
 
-Users can invoke this command using `serve` or its alias `s`:
+Invoke commands using their name or alias:
 
 ```bash
 my-app serve
@@ -84,12 +70,12 @@ my-app s
 
 ### Options
 
-Options modify the behavior of commands. They are identified by flags (e.g., `--verbose`) or aliases (e.g., `-v`). Climonad supports different types of options:
+Options modify command behavior and can be defined as:
 
 - **Boolean Flags**: Toggle features on or off.
 - **String Options**: Accept string values.
 - **Number Options**: Accept numeric inputs.
-- **Default Values**: Provide fallbacks when options are not specified.
+- **Default Values**: Provide fallback values when options are not specified.
 
 Example:
 
@@ -112,7 +98,7 @@ Cli.bool({
 })
 ```
 
-Users can pass options as:
+Pass options as:
 
 ```bash
 my-app serve --host localhost --port 8080 --verbose
@@ -120,9 +106,9 @@ my-app serve --host localhost --port 8080 --verbose
 
 ### Parsing Logic
 
-- **Positional Arguments**: Climonad identifies commands based on their position. For example, in `my-app serve`, "serve" is a positional argument matched to a command.
-- **Flag Arguments**: Options prefixed with `--` (or aliases like `-v`) are parsed and mapped to their respective definitions.
-- **Default Values**: If a flag is not provided, Climonad falls back to the default value defined in its configuration.
+- **Positional Arguments**: Commands are identified by position (e.g., `my-app serve`).
+- **Flag Arguments**: Options prefixed with `--` or aliases like `-v` are parsed.
+- **Default Values**: If a flag is not provided, Climonad uses the default value.
 
 Example:
 
@@ -130,22 +116,25 @@ Example:
 const result = cli.parse(["serve", "--host", "example.com", "--port", "3000"])
 ```
 
-Results in:
+Produces:
 
-```js
+```javascript
 {
-  "commands": Set(1) { "serve" },
-  "options": Map(2) { "host" => "example.com", "port" => 3000 },
-  "generateHelp": [Function (anonymous)]
+  commands: new Set(["serve"]),
+  options: new Map([
+    ["host", "example.com"],
+    ["port", 3000],
+  ]),
+  generateHelp: [Function],
 }
 ```
 
 ### Auto Help Generation
 
-Climonad provides built-in support for command-scoped help generation. Users can invoke the `-h` or `--help` flag to display detailed help information:
+Invoke `-h` or `--help` to display detailed help:
 
-- **Global Help**: When used without a command, it shows help for the entire CLI application.
-- **Command-Scoped Help**: When used with a command, it displays help specific to that command.
+- **Global Help**: Provides help for the entire CLI.
+- **Command-Scoped Help**: Displays help specific to a command.
 
 Example:
 
@@ -154,20 +143,18 @@ my-app --help
 my-app serve --help
 ```
 
-This feature is automatically enabled, requiring no additional configuration.
-
 ### Error Handling
 
-Climonad provides robust error handling for invalid or unknown arguments. For example:
+Climonad includes robust error handling:
 
-- If a required command or option is missing, it throws a `CliError`.
-- If an invalid value is provided for a typed option (e.g., `--port not-a-number`), it raises an appropriate error.
+- Missing required commands or options throws a `CliError`.
+- Invalid values for typed options (e.g., `--port not-a-number`) raise descriptive errors.
 
 ## Performance
 
-> 💡 **Note**: These are preliminary metrics from an **early development version**. Climonad's API and performance are still evolving.
+> **Note:** Metrics are preliminary and subject to change as the library evolves.
 
-These [`benchmarks`](test/bench.ts) were conducted using **Deno's built-in [`bench`](https://docs.deno.com/api/deno/~/Deno.bench) tool**, ensuring consistent and reliable results:
+Benchmarks conducted using **Deno's [`bench`](https://docs.deno.com/api/deno/~/Deno.bench)**:
 
 | **Operation**           | **Time (avg)** | **Ops/Second** |
 | ----------------------- | -------------- | -------------- |
@@ -175,26 +162,26 @@ These [`benchmarks`](test/bench.ts) were conducted using **Deno's built-in [`ben
 | Basic Command Execution | ~190.5 ns      | 5,249,000      |
 | Command with Options    | ~654.5 ns      | 1,528,000      |
 
-### Algorithmic Complexity (Latest Update)
+### Algorithmic Complexity
 
-- **CLI Initialization**: O(n) where n is the total number of commands and options being registered
-- **Command/Option Lookup**: O(1) using an optimized tree structure with path caching
-- **Argument Parsing**: O(n) where n is the number of input arguments
-- **Help Generation**: O(m) where m is the number of commands/options in the current scope
-- **Space Complexity**: O(n) where n is the total number of registered commands and options, with a small additional overhead for the path cache which improves lookup performance.
+- **CLI Initialization**: O(n) for commands and options.
+- **Command/Option Lookup**: O(1) with optimized caching.
+- **Argument Parsing**: O(n) for input arguments.
+- **Help Generation**: O(m) for scoped commands/options.
+- **Space Complexity**: O(n) with minimal overhead.
 
-Climonad is now highly efficient for both small scripts and large CLI applications with many commands and options.
+Efficient for small scripts and large CLI applications alike.
 
-## Contributing 🤝
+## Contributing
 
-[We love contributions!](/CONTRIBUTING.md) Here’s how you can help:
+We welcome contributions! Here's how you can help:
 
-1. 🐛 **Report Bugs**: Found a bug? [Open an issue](https://github.com/supitsdu/climonad/issues).
-2. 💡 **Suggest Features**: Got an idea? Let us know by opening an issue.
-3. 🛠️ **Submit Pull Requests**:
-   - Fork the repository
-   - Create a feature branch
-   - Submit a pull request 🎉
+1. **Report Bugs**: Found a bug? [Open an issue](https://github.com/supitsdu/climonad/issues).
+2. **Suggest Features**: Got an idea? Let us know.
+3. **Submit Pull Requests**:
+   - Fork the repository.
+   - Create a feature branch.
+   - Submit a pull request.
 
 ## License
 
