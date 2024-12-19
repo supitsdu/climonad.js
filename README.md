@@ -11,6 +11,7 @@
 - **Flexible**: Easy-to-define commands and options
 - **Extensible**: Lightweight, modular architecture with a simple API
 - **Powerful**: Support for aliases, flags, and custom options
+- **Required Flags**: Enforce mandatory options for commands
 
 ## Quick Start
 
@@ -75,6 +76,7 @@ Options modify command behavior and can be defined as:
 - **Boolean Flags**: Toggle features on or off.
 - **String Options**: Accept string values.
 - **Number Options**: Accept numeric inputs.
+- **Required Flags**: Mark options as required, enforcing their presence.
 - **Default Values**: Provide fallback values when options are not specified.
 
 Example:
@@ -96,13 +98,22 @@ Cli.bool({
   flag: "--verbose",
   description: "Enable verbose logging",
 })
+Cli.str({
+  name: "config",
+  flag: "--config",
+  description: "Configuration file",
+  required: true, // Marking the option as required
+})
 ```
 
 Pass options as:
 
 ```bash
 my-app serve --host localhost --port 8080 --verbose
+my-app serve --config app.config
 ```
+
+If the required flag is missing, climonad will throw an error.
 
 ### Parsing Logic
 
@@ -120,11 +131,11 @@ Produces:
 
 ```javascript
 {
-  commands: new Set(["serve"]),
-  options: new Map([
-    ["host", "example.com"],
-    ["port", 3000],
-  ]),
+  commands: Set(1) { "serve" },
+  options: Map(2) {
+    "host": "example.com",
+    "port": 3000,
+  },
   generateHelp: [Function],
 }
 ```
@@ -147,7 +158,8 @@ my-app serve --help
 
 Climonad includes robust error handling:
 
-- Missing required commands or options throws a `CliError`.
+- Invalid commands or options throws a `CliError`.
+- Missing required flags will result in an error.
 - Invalid values for typed options (e.g., `--port not-a-number`) raise descriptive errors.
 
 ## Performance
