@@ -23,15 +23,41 @@ To contribute code:
 
 ### 4. **Code Style**
 
-Please follow the existing code style (simple, clean, and easy to follow).
+Please follow the existing code style (simple, clean, and easy to follow). We use **Biome** for linting and **Prettier** for formatting:
+
+- Run linter: `npm run lint`
+- Fix linting issues: `npm run lint:fix`
+- Format Markdown files: `npm run format`
 
 ### 5. **Tests**
 
-If you're adding a feature or fixing a bug, run tests. Make sure all tests pass before submitting your PR.
+If you're adding a feature or fixing a bug, please add tests using **Vitest**. Ensure all tests pass before submitting your PR:
+
+- Run tests: `npm run test`
+- Watch tests: `npm run test:watch`
+- Check test coverage: `npm run test:coverage`
+
+### 6. **Build**
+
+Before submitting your PR, ensure the project builds successfully:
+
+- Build the project: `npm run build`
+- Clean build artifacts: `npm run clean`
+
+### 7. **Benchmarks**
+
+For performance improvements, run benchmarks using **Deno's bench tool**:
+
+- Run benchmarks: `npm run bench`
 
 ## 📚 Resources
 
-- [Deno Docs](https://deno.land/)
+- [Deno Docs](https://docs.deno.com/)
+- [Node.js Documentation](https://nodejs.org/docs/latest/api/)
+- [Vitest Documentation](https://vitest.dev/guide/)
+- [Rollup Documentation](https://rollupjs.org/introduction/)
+- [Biome Documentation](https://biomejs.dev/guides/getting-started/)
+- [Prettier Documentation](https://prettier.io/docs/en/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
 
 ## 🛠 Example Workflow
