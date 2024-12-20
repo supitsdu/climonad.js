@@ -45,7 +45,7 @@ export interface CommandUsage {
 /**
  * Information about a command, used in help display.
  */
-export interface CommandInfo extends BaseConfig {}
+export type CommandInfo = BaseConfig
 
 /**
  * Information about a flag, used in help display.
