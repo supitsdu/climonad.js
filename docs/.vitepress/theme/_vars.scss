@@ -1,0 +1,90 @@
+:root {
+  --vp-custom-block-tip-border: transparent;
+  --vp-custom-block-tip-text: var(--vp-c-text-1);
+  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
+  --vp-custom-block-tip-code-bg: var(--vp-c-brand-soft);
+}
+
+:root {
+  --vp-c-gutter: transparent;
+  --vp-c-border: transparent;
+  --vp-c-divider: transparent;
+  --vp-sidebar-bg-color: transparent;
+}
+
+:root {
+  --vp-c-bg: rgb(6, 6, 6) !important;
+  --vp-c-bg-1: rgb(22, 22, 26, 0.15) !important;
+  --vp-c-bg-2: rgb(22, 22, 26, 0.4) !important;
+  --vp-c-bg-3: rgb(22, 22, 26, 0.85) !important;
+  --vp-c-bg-soft: rgb(36, 36, 40, 0.45) !important;
+  --vp-c-bg-alt: rgb(22, 22, 26, 0.25) !important;
+
+  --vp-c-text: rgb(255, 255, 255) !important;
+  --vp-c-text-1: rgb(255, 255, 255, 0.9) !important;
+  --vp-c-text-2: rgb(255, 255, 255, 0.70) !important;
+  --vp-c-text-3: rgb(255, 255, 255, 0.55) !important;
+  --vp-c-text-soft: rgba(255, 255, 255, 0.5) !important;
+
+  --vp-c-brand: rgb(36, 237, 147) !important;
+  --vp-c-brand-1: rgb(36, 237, 147, 0.95) !important;
+  --vp-c-brand-2: rgb(36, 237, 147, 0.9) !important;
+  --vp-c-brand-3: rgb(36, 237, 147, 0.85) !important;
+  --vp-c-brand-soft: rgba(36, 237, 147, 0.35) !important;
+  --vp-c-brand-alt: rgba(36, 237, 147, 0.25) !important;
+
+  --vp-c-bg-elv: var(--vp-c-bg-2) !important;
+
+  --vp-header-anchor-symbol: "⌯" !important;
+
+  --vp-code-font-size: 0.9em !important;
+
+  --vp-local-search-bg: var(--vp-c-bg-2) !important;
+
+  --vp-c-block-info: rgb(124, 124, 255, 0.85);
+  --vp-c-block-info-soft: rgb(124, 124, 255, 0.35);
+  --vp-c-block-info-alt: rgb(124, 124, 255, 0.05);
+
+  --vp-c-block-tip: rgb(36, 237, 147, 0.85);
+  --vp-c-block-tip-soft: rgb(36, 237, 147, 0.35);
+  --vp-c-block-tip-alt: rgb(36, 237, 147, 0.05);
+
+  --vp-c-block-warning: rgb(240, 196, 0, 0.85);
+  --vp-c-block-warning-soft: rgb(240, 196, 0, 0.35);
+  --vp-c-block-warning-alt: rgb(240, 196, 0, 0.05);
+
+  --vp-c-block-danger: rgb(255, 68, 68, 0.85);
+  --vp-c-block-danger-soft: rgb(255, 68, 68, 0.35);
+  --vp-c-block-danger-alt: rgb(255, 68, 68, 0.05);
+
+  --vp-c-block-details: var(--vp-c-bg-soft);
+  --vp-c-block-details-alt: var(--vp-c-bg-alt);
+
+  --docsearch-primary-color: var(--vp-c-brand-1) !important;
+
+}
+
+/**
+ * Component: Home
+ * -------------------------------------------------------------------------- */
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, rgb(36, 237, 147) 30%, #41d1ff);
+
+  --vp-home-hero-image-background-image: linear-gradient(-45deg,
+      rgba(36, 237, 147, 0.25) 50%,
+      rgba(71, 203, 255, 0.25) 60%);
+  --vp-home-hero-image-filter: blur(70px);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --vp-home-hero-image-filter: blur(56px);
+  }
+}
+
+@media (min-width: 960px) {
+  :root {
+    --vp-home-hero-image-filter: blur(68px);
+  }
+}

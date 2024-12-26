@@ -1,0 +1,441 @@
+/**
+ * Customize default theme styling by overriding CSS variables:
+ * https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css
+ */
+
+@use "_vars";
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--vp-c-text);
+  font-weight: bolder !important;
+
+}
+
+h1,
+p {
+  margin: 1.25em inherit;
+
+}
+
+
+/**
+ * Custom (HOME): Customize the banner image on the home page
+ */
+.VPImage.image-src {
+  mix-blend-mode: difference !important;
+}
+
+/**
+ * Custom (HOME): Change the features list on the home page
+ */
+.VPFeature {
+  background-color: var(--vp-c-bg-1) !important;
+  border: 3px solid var(--vp-c-bg-3) !important;
+  transition: none !important;
+
+  &:hover,
+  &:focus {
+    background-color: var(--vp-c-bg-2) !important;
+    border: 3px solid var(--vp-c-bg-soft) !important;
+  }
+}
+
+/**
+ * Custom (HOME): Change the appearence of the buttons
+ */
+.VPButton {
+  &.medium {
+    border-radius: 8px !important;
+    padding: 0px 20px !important;
+  }
+
+  &.brand {
+    background: var(--vp-c-text) !important;
+    color: var(--vp-c-bg) !important;
+
+    &:hover {
+      opacity: 0.92;
+    }
+  }
+
+  &.alt {
+    background: var(--vp-c-bg-soft) !important;
+    color: var(--vp-c-text) !important;
+    border: 1px solid rgb(26, 26, 30, 0.95) !important;
+
+    &:hover {
+      opacity: 0.92;
+    }
+  }
+}
+
+/**
+ * Custom: Change the appearence of the navigation bar
+ */
+.VPNav {
+
+  &,
+  .VPNavBar {
+    background-color: transparent !important;
+    border: transparent !important;
+    backdrop-filter: blur(10px) !important;
+    position: relative;
+
+    .wrapper {
+      border-bottom: 1px solid var(--vp-c-bg-soft) !important;
+      width: 100%;
+      height: 100%;
+      background:
+        linear-gradient(0deg, transparent 0%, var(--vp-c-bg) 90%);
+      background-size: 4px 4px;
+      fill-rule: evenodd;
+      background-position: 0 0, 0 0;
+      background-attachment: fixed;
+      backface-visibility: visible;
+      background-attachment: fixed;
+      background-repeat: repeat, repeat;
+      background-blend-mode: overlay;
+    }
+  }
+}
+
+/**
+ * Custom (DOCS): Change the appearence of local navigation
+ */
+.VPLocalNavOutlineDropdown .items {
+  backdrop-filter: blur(20px) !important;
+  background-color: transparent !important;
+  background-attachment: fixed !important;
+  border: 1px solid var(--vp-c-bg-soft) !important;
+  width: fit-content !important;
+  padding: 0px 4px !important;
+
+  .header {
+    border-bottom: 1px solid var(--vp-c-bg-soft) !important;
+  }
+
+  .header,
+  .outline {
+    background-color: transparent !important;
+  }
+}
+
+.VPLocalNav {
+  position: absolute !important;
+  top: 77px !important;
+  width: fit-content !important;
+}
+
+.VPNavScreen {
+  display: flex !important;
+  position: absolute !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  justify-content: left !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  background: var(--vp-c-bg) !important;
+  z-index: 500 !important;
+}
+
+/**
+ * Custom (DOCS): Change the appearence of the content
+ */
+.Layout .VPContent {
+  margin-top: 32px !important;
+}
+
+/**
+ * Custom: Change the appearence of the navigation bar search
+ */
+.VPNavBar {
+  .content-body {
+    background: transparent !important;
+  }
+
+  .VPNavBarSearch.search {
+    justify-content: flex-end !important;
+    padding-left: 0px !important;
+    padding-right: 18px !important;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .VPNavBarSearch .DocSearch.DocSearch-Button {
+    border: 1px solid var(--vp-c-bg-soft) !important;
+  }
+}
+
+.VPLocalSearchBox {
+  .shell {
+    background-color: transparent !important;
+    backdrop-filter: blur(30px) !important;
+    border: 1px solid var(--vp-c-bg-soft) !important;
+  }
+
+  .result {
+    border: 1px solid transparent !important;
+
+    &.selected {
+      border: 1px solid var(--vp-c-bg-soft) !important;
+      background-color: var(--vp-c-bg-2) !important;
+      filter: brightness(1.1) !important;
+      border-radius: 8px;
+    }
+
+    .title-icon {
+      display: none !important;
+    }
+
+    .titles::before {
+      opacity: 1 !important;
+      display: flex;
+      align-content: center;
+      justify-content: center;
+      content: var(--vp-header-anchor-symbol);
+      height: 24px;
+      width: 24px;
+      font-size: 1.5em;
+      margin-right: 10px;
+    }
+  }
+}
+
+/**
+ * Custom: Cleanup some unwanted default styles
+ */
+.excerpt-gradient-bottom,
+.excerpt-gradient-top {
+  background: transparent !important;
+  display: none !important;
+}
+
+/**
+ * Custom: Change the appearence of the content area. (E.g. Links, headings, buttons, etc.)
+ */
+.vp-doc {
+  a {
+    color: unset !important;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--vp-c-brand) !important;
+
+    &:hover,
+    &:focus {
+      color: var(--vp-c-brand) !important;
+    }
+  }
+
+  h1 {
+    line-height: 1.3;
+  }
+
+  button.copy {
+    width: 1.75em !important;
+    height: 1.85em !important;
+    padding: 3px !important;
+    background-color: var(--vp-c-bg-3) !important;
+    opacity: 1 !important;
+    top: 0.7em !important;
+
+
+    &:hover {
+      background-color: var(--vp-c-bg-soft) !important;
+    }
+  }
+
+  span.lang {
+    display: none !important;
+  }
+
+  :not(pre, h1, h2, h3, h4, h5, h6)>code {
+    color: unset !important;
+    padding: 2px 6px !important;
+  }
+}
+
+.VPNavBarMenuLink {
+  color: var(--vp-c-text-3) !important;
+
+  &.active {
+    color: var(--vp-c-text) !important;
+  }
+}
+
+/**
+ * Custom: Change the appearence of the dropdown menu
+ */
+.VPMenu {
+  backdrop-filter: blur(10px) !important;
+  background: var(--vp-c-bg-1) !important;
+  border: 1px solid var(--vp-c-bg-soft) !important;
+}
+
+/**
+ * Custom: Change the appearence of the sidebar
+ */
+.VPSidebar {
+  background-color: transparent !important;
+  border: 1px solid var(--vp-c-bg-soft) !important;
+  z-index: 30 !important;
+  pointer-events: none !important;
+  padding-top: 77px !important;
+
+  &.open {
+    backdrop-filter: blur(20px) !important;
+    z-index: 60 !important;
+  }
+
+  nav {
+    pointer-events: all !important;
+  }
+
+  .VPSidebarItem {
+    .item {
+      .text {
+        padding-left: 16px;
+        font-size: 0.75em !important;
+      }
+
+      &[role="button"] {
+        margin: 0px !important;
+      }
+    }
+
+    .items {
+      .VPSidebarItem {
+        width: 100% !important;
+
+        .VPLink {
+          width: 100% !important;
+          display: flex !important;
+          position: relative !important;
+          border-radius: 8px !important;
+          font-size: 1.2em !important;
+
+          &:hover {
+            background-color: var(--vp-c-bg-soft) !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Custom: Change the appearence of the codeblocks groups
+ */
+div.vp-adaptive-theme {
+
+  margin: 16px auto !important;
+  background-color: var(--vp-c-bg-3) !important;
+  border-radius: 0px !important;
+  width: 100% !important;
+  border: 1px solid var(--vp-c-bg-soft) !important;
+
+  pre {
+    padding: 0.7em 0px !important;
+  }
+
+  code {
+    padding: 0px 1.2em !important;
+    line-height: 1.45em !important;
+  }
+
+}
+
+
+.vp-code-group.vp-adaptive-theme {
+  background: var(--vp-c-bg) !important;
+  border: 0px !important;
+
+  >div {
+    border-radius: 0px !important;
+    background: var(--vp-c-bg) !important;
+  }
+
+  .tabs {
+    background: var(--vp-c-bg-1) !important;
+    border: 1px solid var(--vp-c-bg-3) !important;
+    margin: auto !important;
+  }
+}
+
+.pager-link {
+  background-color: var(--vp-c-bg) !important;
+  border: 1px solid var(--vp-c-bg-3) !important;
+
+  .title {
+    color: var(--vp-c-text-2) !important;
+  }
+
+  &:hover {
+    .title {
+      color: var(--vp-c-text) !important;
+    }
+  }
+
+  &:focus {
+    outline-style: solid !important;
+  }
+}
+
+.custom-block {
+  background: transparent !important;
+  border-radius: 2px;
+  font-size: 1.0475em;
+  padding: 8px 32px !important;
+  width: 100% !important;
+
+  & h1,
+  & h2,
+  & h3,
+  & h4,
+  & p {
+    color: inherit !important;
+  }
+
+  & .vp-adaptive-theme {
+    margin-bottom: 18px !important;
+  }
+
+  &.info {
+    border-left: var(--vp-c-block-info-soft) 3px solid !important;
+    background: var(--vp-c-block-info-alt) !important;
+    color: var(--vp-c-block-info) !important;
+  }
+
+  &.tip {
+    border-left: var(--vp-c-block-tip) 3px solid !important;
+    background: var(--vp-c-block-tip-alt) !important;
+    color: var(--vp-c-block-tip) !important;
+  }
+
+  &.warning {
+    border-left: var(--vp-c-block-warning) 3px solid !important;
+    background: var(--vp-c-block-warning-alt) !important;
+    color: var(--vp-c-block-warning) !important;
+  }
+
+  &.danger {
+    border-left: var(--vp-c-block-danger) 3px solid !important;
+    background: var(--vp-c-block-danger-alt) !important;
+    color: var(--vp-c-block-danger) !important;
+  }
+
+  &.details {
+    border-left: var(--vp-c-block-details) 3px solid !important;
+    background: var(--vp-c-block-details-alt) !important;
+    color: var(--vp-c-text) !important;
+  }
+}
+
+.custom-block-title {
+  font-size: 0.9em !important;
+  letter-spacing: 0.1em;
+  font-weight: bolder;
+}
