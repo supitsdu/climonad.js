@@ -1,35 +1,30 @@
-# 🤝 Contributing to Climonad.js
+# Contributing
 
-We welcome contributions! Whether you’re fixing a bug, suggesting a feature, or improving documentation, your help is appreciated.
+Contributions are welcome! Whether you’re fixing a bug, suggesting a feature, or improving documentation, your help is much appreciated.
 
-## 📝 How to Contribute
+## Introduction
 
-### 1. **Report Bugs**
+The goal behing creating this framework was to add a extra layer of modularization, performance, security, and usability which would help developers around the world on writing small or larger Node.js CLI tools.
 
-Found a bug? Please check existing issues first. If it’s not reported, open a new issue with a clear description, including steps to reproduce and error messages.
+## Developers Guide
 
-### 2. **Suggest Features**
+### Basic Workflow
 
-Got an idea for a feature? Check if it’s already suggested, then open an issue with a brief description of the feature and its benefits.
+1. Fork the original repo `https://github.com/supitsdu/climonad.js`.
+2. Clone it locally `git clone <your-fork-url>`
+3. Create a new branch: `git checkout -b feat/my-feature`.
+4. Make your changes, commit, and push.
+5. Open a PR.
 
-### 3. **Submit a Pull Request (PR)**
+### Code Style
 
-To contribute code:
-
-1. Fork the repository and clone it locally.
-2. Create a new branch: `git checkout -b feature/my-feature`.
-3. Make your changes, add tests if necessary, and commit with clear messages.
-4. Push your branch and create a PR.
-
-### 4. **Code Style**
-
-Please follow the existing code style (simple, clean, and easy to follow). We use **Biome** for linting and **Prettier** for formatting:
+Please follow the existing code style (simple, clean, and easy to follow).
 
 - Run linter: `npm run lint`
 - Fix linting issues: `npm run lint:fix`
 - Format Markdown files: `npm run format`
 
-### 5. **Tests**
+### Tests
 
 If you're adding a feature or fixing a bug, please add tests using **Vitest**. Ensure all tests pass before submitting your PR:
 
@@ -37,39 +32,66 @@ If you're adding a feature or fixing a bug, please add tests using **Vitest**. E
 - Watch tests: `npm run test:watch`
 - Check test coverage: `npm run test:coverage`
 
-### 6. **Build**
+### Build
 
 Before submitting your PR, ensure the project builds successfully:
 
 - Build the project: `npm run build`
 - Clean build artifacts: `npm run clean`
 
-### 7. **Benchmarks**
+### Benchmarks
 
 For performance improvements, run benchmarks using **Deno's bench tool**:
 
 - Run benchmarks: `npm run bench`
 
-## 📚 Resources
+### Project Structure
+
+```toml
+src\
+    cli.ts                   # CLI entry point
+    flags.ts                 # Flag parsing logic
+    main.ts                  # Exposes public API
+    parser.ts                # Command-line argument parser
+    types.ts                 # Type definitions
+    usageGenerator.ts        # Usage information generator
+    utils.ts                 # Utility functions
+test\
+    bench.ts                 # Benchmark tests
+    cli.test.ts              # Tests for CLI functionality
+    flags.test.ts            # Tests for flag parsing
+    parser.test.ts           # Tests for argument parser
+    types.test.ts            # Tests for type definitions
+    usageGenerator.test.ts   # Tests for usage generator
+    utils.test.ts            # Tests for utility functions
+```
+
+## Help Needed
+
+Climonad is a community-driven project and any help you can provide is much appreciated. Here are some areas where you can contribute:
+
+### Issue Triage
+
+Help us manage issues by:
+
+- Reproducing reported bugs
+- Clarifying issue descriptions
+- Tagging issues with appropriate labels
+
+### Pull Requests
+
+We encourage you to open pull requests, especially for issues tagged with the help-needed label.
+
+### Community Support
+
+Assist other users by participating in the issue tracker, and GitHub discussions. Your expertise can help others solve problems and improve their experience with Climonad.js.
+
+## Resources
 
 - [Deno Docs](https://docs.deno.com/)
 - [Node.js Documentation](https://nodejs.org/docs/latest/api/)
 - [Vitest Documentation](https://vitest.dev/guide/)
 - [Rollup Documentation](https://rollupjs.org/introduction/)
-- [Biome Documentation](https://biomejs.dev/guides/getting-started/)
+- [Eslint Documentation](https://eslint.org/)
 - [Prettier Documentation](https://prettier.io/docs/en/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
-
-## 🛠 Example Workflow
-
-1. Fork the repo.
-2. Clone it locally.
-3. Create a new branch: `git checkout -b feat/my-feature`.
-4. Make your changes, commit, and push.
-5. Open a PR.
-
-## 🙋‍♀️ Need Help?
-
-If you have questions, feel free to open an issue or discussion.
-
-Thank you for contributing! 🎉
