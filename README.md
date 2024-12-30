@@ -3,41 +3,18 @@
 > [!WARNING]
 > This library is in **early development**, and APIs may change without notice.
 
-**A high-performance, low-overhead library for building modern command-line interfaces in Node.js.**
+**Next-Gen CLI framework built for Node.js.**
 
-## Features
-
-- **High-Performance**: Lightning-fast CLI argument parsing
-- **Flexible**: Easy-to-define commands and options
-- **Extensible**: Lightweight, modular architecture with a simple API
-- **Powerful**: Support for aliases, flags, and custom options
-- **Required Flags**: Enforce mandatory options for commands
-
-## Quick Start
-
-### Define Your CLI
+## Usage
 
 ```javascript
 import { Cli } from "climonad"
 
+// Create a new command-line interface
 const cli = Cli.createCli({
-  name: "my-app",
-  description: "A powerful CLI application",
-  commands: [
-    Cli.cmd({ name: "init", description: "Initialize the project" }),
-    Cli.cmd({
-      name: "build",
-      description: "Build the project",
-      options: [
-        Cli.str({
-          name: "output",
-          flag: "--out",
-          alias: "-o",
-          description: "Set output directory",
-        }),
-      ],
-    }),
-  ],
+  name: "pm",
+  description: "Project management CLI",
+  commands: [Cli.cmd({ name: "init", description: "Initialize the project" })],
   options: [
     Cli.bool({
       name: "verboseOption",
@@ -47,7 +24,20 @@ const cli = Cli.createCli({
   ],
 })
 
-cli.run(process.argv.slice(2))
+try {
+  const cliArgs = cli.parse(process.argv.slice(2))
+  const help = cliArgs.generateHelp()
+
+  if (help) {
+    console.log(JSON.stringify(help, null, 2))
+  }
+
+  if (cliArgs.commands.has("init")) {
+    // Handle the init command
+  }
+} catch (err) {
+  console.error(error)
+}
 ```
 
 ## Argument Parsing and Handling
@@ -69,15 +59,15 @@ my-app serve
 my-app s
 ```
 
-### Options
+### Flags
 
-Options modify command behavior and can be defined as:
+Flags modify command behavior and can be defined as:
 
 - **Boolean Flags**: Toggle features on or off.
-- **String Options**: Accept string values.
-- **Number Options**: Accept numeric inputs.
-- **Required Flags**: Mark options as required, enforcing their presence.
-- **Default Values**: Provide fallback values when options are not specified.
+- **String Flags**: Accept string values.
+- **Number Flags**: Accept numeric inputs.
+- **Required Flags**: Mark flags as required, enforcing their presence.
+- **Default Values**: Provide fallback values when flags are not specified.
 
 Example:
 
@@ -106,7 +96,7 @@ Cli.str({
 })
 ```
 
-Pass options as:
+Pass flags as:
 
 ```bash
 my-app serve --host localhost --port 8080 --verbose
@@ -118,7 +108,7 @@ If the required flag is missing, climonad will throw an error.
 ### Parsing Logic
 
 - **Positional Arguments**: Commands are identified by position (e.g., `my-app serve`).
-- **Flag Arguments**: Options prefixed with `--` or aliases like `-v` are parsed.
+- **Flag Arguments**: Flags prefixed with `--` or aliases like `-v` are parsed.
 - **Default Values**: If a flag is not provided, Climonad uses the default value.
 
 Example:
@@ -158,9 +148,9 @@ my-app serve --help
 
 Climonad includes robust error handling:
 
-- Invalid commands or options throws a `CliError`.
+- Invalid commands or flags throws a `CliError`.
 - Missing required flags will result in an error.
-- Invalid values for typed options (e.g., `--port not-a-number`) raise descriptive errors.
+- Invalid values for typed flags (e.g., `--port not-a-number`) raise descriptive errors.
 
 ## Performance
 
@@ -173,21 +163,21 @@ Benchmarks conducted using **Deno's [`bench`](https://docs.deno.com/api/deno/~/D
 | ----------------------- | -------------- | -------------- |
 | CLI Initialization      | ~725.4 ns      | 1,379,000      |
 | Basic Command Execution | ~190.5 ns      | 5,249,000      |
-| Command with Options    | ~654.5 ns      | 1,528,000      |
+| Command with flags      | ~654.5 ns      | 1,528,000      |
 
 ### Algorithmic Complexity
 
-- **CLI Initialization**: O(n) for commands and options.
+- **CLI Initialization**: O(n) for commands and flags.
 - **Command/Option Lookup**: O(1) with optimized caching.
 - **Argument Parsing**: O(n) for input arguments.
-- **Help Generation**: O(m) for scoped commands/options.
+- **Help Generation**: O(m) for scoped commands/flags.
 - **Space Complexity**: O(n) with minimal overhead.
 
 Efficient for small scripts and large CLI applications alike.
 
 ## Contributing
 
-We welcome contributions! Here's how you can help:
+We welcome [contributions](/CONTRIBUTING.md)! Here's how you can help:
 
 1. **Report Bugs**: Found a bug? [Open an issue](https://github.com/supitsdu/climonad/issues).
 2. **Suggest Features**: Got an idea? Let us know.
