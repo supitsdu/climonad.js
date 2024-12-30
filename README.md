@@ -15,7 +15,7 @@ const cli = Cli.createCli({
   name: "pm",
   description: "Project management CLI",
   commands: [Cli.cmd({ name: "init", description: "Initialize the project" })],
-  options: [
+  flags: [
     Cli.bool({
       name: "verboseOption",
       flag: "--verbose",
@@ -46,7 +46,7 @@ Climonad uses declarative configuration to define and parse CLI arguments:
 
 ### Commands
 
-Commands represent distinct functionalities, like "build" or "serve." Define them using `Cli.cmd()` and assign descriptions, aliases, and options. For example:
+Commands represent distinct functionalities, like "build" or "serve." Define them using `Cli.cmd()` and assign descriptions, aliases, and flags. For example:
 
 ```javascript
 Cli.cmd({ name: "serve", description: "Start the development server", alias: "s" })
@@ -122,7 +122,7 @@ Produces:
 ```javascript
 {
   commands: Set(1) { "serve" },
-  options: Map(2) {
+  flags: Map(2) {
     "host": "example.com",
     "port": 3000,
   },
