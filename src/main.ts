@@ -1,3 +1,3 @@
-export { Cli, CliError } from "./cli"
-export * from "./types"
-export { Flags } from "./flags"
+export { cmd, Command } from "./Command"
+export { bool, Flag, num, str } from "./Flag"
+export { cli, Setup, SetupConfig } from "./Setup"
