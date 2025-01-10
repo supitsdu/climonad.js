@@ -1,75 +1,153 @@
-# 🤝 Contributing to Climonad.js
+# Contributing
 
-We welcome contributions! Whether you’re fixing a bug, suggesting a feature, or improving documentation, your help is appreciated.
+Contributions are welcome! Whether you’re fixing a bug, suggesting a feature, or improving documentation, your help is much appreciated.
 
-## 📝 How to Contribute
+---
 
-### 1. **Report Bugs**
+## **Introduction**
 
-Found a bug? Please check existing issues first. If it’s not reported, open a new issue with a clear description, including steps to reproduce and error messages.
+The goal behind creating this framework was to provide an additional layer of modularization, performance, security, and usability to help developers worldwide write small or large Node.js CLI tools effortlessly.
 
-### 2. **Suggest Features**
+---
 
-Got an idea for a feature? Check if it’s already suggested, then open an issue with a brief description of the feature and its benefits.
+## **Developer Guide**
 
-### 3. **Submit a Pull Request (PR)**
+### **Basic Workflow**
 
-To contribute code:
+1. **Fork the repository**: [https://github.com/supitsdu/climonad.js](https://github.com/supitsdu/climonad.js)
+2. **Clone your fork locally**:
+   ```bash
+   git clone <your-fork-url>
+   ```
+3. **Create a new branch**:
+   ```bash
+   git checkout -b feat/my-feature
+   ```
+4. **Make changes, commit, and push**:
+   ```bash
+   git add .
+   git commit -m "feat: add a cool feature"
+   git push origin feat/my-feature
+   ```
+5. **Open a pull request**: Compare your branch against `main` in the original repository and submit your PR.
 
-1. Fork the repository and clone it locally.
-2. Create a new branch: `git checkout -b feature/my-feature`.
-3. Make your changes, add tests if necessary, and commit with clear messages.
-4. Push your branch and create a PR.
+---
 
-### 4. **Code Style**
+### **Code Style**
 
-Please follow the existing code style (simple, clean, and easy to follow). We use **Biome** for linting and **Prettier** for formatting:
+Adhere to the existing code style to ensure consistency across the project.
 
-- Run linter: `npm run lint`
-- Fix linting issues: `npm run lint:fix`
-- Format Markdown files: `npm run format`
+- **Lint your code**:
+  ```bash
+  npm run lint
+  ```
+- **Fix linting issues**:
+  ```bash
+  npm run lint:fix
+  ```
+- **Format Markdown files**:
+  ```bash
+  npm run format
+  ```
 
-### 5. **Tests**
+---
+
+### **Testing**
 
 If you're adding a feature or fixing a bug, please add tests using **Vitest**. Ensure all tests pass before submitting your PR:
 
-- Run tests: `npm run test`
-- Watch tests: `npm run test:watch`
-- Check test coverage: `npm run test:coverage`
+- Run tests:
+  ```bash
+  npm run test
+  ```
+- Watch tests:
+  ```bash
+  npm run test:watch
+  ```
+- Check test coverage:
+  ```bash
+  npm run test:coverage
+  ```
 
-### 6. **Build**
+---
 
-Before submitting your PR, ensure the project builds successfully:
+### **Building the Project**
 
-- Build the project: `npm run build`
-- Clean build artifacts: `npm run clean`
+Ensure the project builds successfully before submitting your PR:
 
-### 7. **Benchmarks**
+- Build the project:
+  ```bash
+  npm run build
+  ```
+- Clean build artifacts:
+  ```bash
+  npm run clean
+  ```
+
+---
+
+### **Benchmarking**
 
 For performance improvements, run benchmarks using **Deno's bench tool**:
 
-- Run benchmarks: `npm run bench`
+- Run benchmarks:
+  ```bash
+  npm run bench
+  ```
 
-## 📚 Resources
+---
 
-- [Deno Docs](https://docs.deno.com/)
+### **Project Structure**
+
+```plaintext
+src/
+    Command.ts               # Command definition logic
+    Flag.ts                  # Flag definition logic
+    main.ts                  # Exposes public API
+    Scope.ts                 # Scope management logic
+    Setup.ts                 # CLI setup management logic
+    types.ts                 # Type definitions
+test/
+    bench.ts                 # Benchmark tests
+    Command.test.ts          # Tests for Command definition
+    Flag.test.ts             # Tests for Flag definition
+    Scope.test.ts            # Tests for Scope management
+    Setup.test.ts            # Tests for CLI setup
+    types.test.ts            # Tests for type definitions
+```
+
+---
+
+## **How to Contribute**
+
+### **Help with Issues**
+
+Assist us in managing issues by:
+
+- Reproducing reported bugs
+- Clarifying issue descriptions
+- Tagging issues with appropriate labels
+
+### **Open Pull Requests**
+
+We encourage you to open PRs, especially for issues tagged with the `help-needed` label.
+
+### **Community Support**
+
+Engage with other developers by participating in discussions on the issue tracker and GitHub discussions. Your expertise helps improve the framework for everyone.
+
+---
+
+## **Resources**
+
+- [Deno Docs](https://deno.land/manual)
 - [Node.js Documentation](https://nodejs.org/docs/latest/api/)
 - [Vitest Documentation](https://vitest.dev/guide/)
 - [Rollup Documentation](https://rollupjs.org/introduction/)
-- [Biome Documentation](https://biomejs.dev/guides/getting-started/)
+- [Eslint Documentation](https://eslint.org/)
 - [Prettier Documentation](https://prettier.io/docs/en/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
 
-## 🛠 Example Workflow
+---
 
-1. Fork the repo.
-2. Clone it locally.
-3. Create a new branch: `git checkout -b feat/my-feature`.
-4. Make your changes, commit, and push.
-5. Open a PR.
-
-## 🙋‍♀️ Need Help?
-
-If you have questions, feel free to open an issue or discussion.
-
-Thank you for contributing! 🎉
+Thank you for contributing to Climonad.js! Your support is invaluable to the growth and success of this project.
