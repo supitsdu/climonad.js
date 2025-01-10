@@ -6,7 +6,6 @@ import prettier from "eslint-config-prettier"
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { files: ["docs/**/*.{ts,js,vue}", "src/*.{ts}"] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
@@ -30,4 +29,7 @@ export default [
     },
   },
   prettier,
+  {
+    ignores: ["**/node_modules/**", "**/dist/**", "**/build/**", "**/coverage/**"],
+  },
 ]
