@@ -1,7 +1,7 @@
 {
   "name": "climonad",
-  "version": "0.3.0",
-  "description": "A high-performance, low-overhead library for building modern command-line interfaces in Node.js",
+  "version": "0.4.0",
+  "description": "A feature-rich framework for building structured and maintainable command-line tools",
   "main": "./dist/main.cjs",
   "type": "module",
   "module": "./dist/main.mjs",
