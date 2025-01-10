@@ -44,7 +44,7 @@ describe("Flag", () => {
         description: "test flag",
       })
 
-      expect(() => flag.parser({} as ParserConfig)).toThrow()
+      await expect(flag.parser({} as ParserConfig)).rejects.toThrow()
     })
   })
 
