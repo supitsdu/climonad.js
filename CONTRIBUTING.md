@@ -2,96 +2,152 @@
 
 Contributions are welcome! Whether you’re fixing a bug, suggesting a feature, or improving documentation, your help is much appreciated.
 
-## Introduction
+---
 
-The goal behing creating this framework was to add a extra layer of modularization, performance, security, and usability which would help developers around the world on writing small or larger Node.js CLI tools.
+## **Introduction**
 
-## Developers Guide
+The goal behind creating this framework was to provide an additional layer of modularization, performance, security, and usability to help developers worldwide write small or large Node.js CLI tools effortlessly.
 
-### Basic Workflow
+---
 
-1. Fork the original repo `https://github.com/supitsdu/climonad.js`.
-2. Clone it locally `git clone <your-fork-url>`
-3. Create a new branch: `git checkout -b feat/my-feature`.
-4. Make your changes, commit, and push.
-5. Open a PR.
+## **Developer Guide**
 
-### Code Style
+### **Basic Workflow**
 
-Please follow the existing code style (simple, clean, and easy to follow).
+1. **Fork the repository**: [https://github.com/supitsdu/climonad.js](https://github.com/supitsdu/climonad.js)
+2. **Clone your fork locally**:
+   ```bash
+   git clone <your-fork-url>
+   ```
+3. **Create a new branch**:
+   ```bash
+   git checkout -b feat/my-feature
+   ```
+4. **Make changes, commit, and push**:
+   ```bash
+   git add .
+   git commit -m "feat: add a cool feature"
+   git push origin feat/my-feature
+   ```
+5. **Open a pull request**: Compare your branch against `main` in the original repository and submit your PR.
 
-- Run linter: `npm run lint`
-- Fix linting issues: `npm run lint:fix`
-- Format Markdown files: `npm run format`
+---
 
-### Tests
+### **Code Style**
+
+Adhere to the existing code style to ensure consistency across the project.
+
+- **Lint your code**:
+  ```bash
+  npm run lint
+  ```
+- **Fix linting issues**:
+  ```bash
+  npm run lint:fix
+  ```
+- **Format Markdown files**:
+  ```bash
+  npm run format
+  ```
+
+---
+
+### **Testing**
 
 If you're adding a feature or fixing a bug, please add tests using **Vitest**. Ensure all tests pass before submitting your PR:
 
-- Run tests: `npm run test`
-- Watch tests: `npm run test:watch`
-- Check test coverage: `npm run test:coverage`
+- Run tests:
+  ```bash
+  npm run test
+  ```
+- Watch tests:
+  ```bash
+  npm run test:watch
+  ```
+- Check test coverage:
+  ```bash
+  npm run test:coverage
+  ```
 
-### Build
+---
 
-Before submitting your PR, ensure the project builds successfully:
+### **Building the Project**
 
-- Build the project: `npm run build`
-- Clean build artifacts: `npm run clean`
+Ensure the project builds successfully before submitting your PR:
 
-### Benchmarks
+- Build the project:
+  ```bash
+  npm run build
+  ```
+- Clean build artifacts:
+  ```bash
+  npm run clean
+  ```
+
+---
+
+### **Benchmarking**
 
 For performance improvements, run benchmarks using **Deno's bench tool**:
 
-- Run benchmarks: `npm run bench`
+- Run benchmarks:
+  ```bash
+  npm run bench
+  ```
 
-### Project Structure
+---
 
-```toml
-src\
-    cli.ts                   # CLI entry point
-    flags.ts                 # Flag parsing logic
+### **Project Structure**
+
+```plaintext
+src/
+    Command.ts               # Command definition logic
+    Flag.ts                  # Flag definition logic
     main.ts                  # Exposes public API
-    parser.ts                # Command-line argument parser
+    Scope.ts                 # Scope management logic
+    Setup.ts                 # CLI setup management logic
     types.ts                 # Type definitions
-    usageGenerator.ts        # Usage information generator
-    utils.ts                 # Utility functions
-test\
+test/
     bench.ts                 # Benchmark tests
-    cli.test.ts              # Tests for CLI functionality
-    flags.test.ts            # Tests for flag parsing
-    parser.test.ts           # Tests for argument parser
+    Command.test.ts          # Tests for Command definition
+    Flag.test.ts             # Tests for Flag definition
+    Scope.test.ts            # Tests for Scope management
+    Setup.test.ts            # Tests for CLI setup
     types.test.ts            # Tests for type definitions
-    usageGenerator.test.ts   # Tests for usage generator
-    utils.test.ts            # Tests for utility functions
 ```
 
-## Help Needed
+---
 
-Climonad is a community-driven project and any help you can provide is much appreciated. Here are some areas where you can contribute:
+## **How to Contribute**
 
-### Issue Triage
+### **Help with Issues**
 
-Help us manage issues by:
+Assist us in managing issues by:
 
 - Reproducing reported bugs
 - Clarifying issue descriptions
 - Tagging issues with appropriate labels
 
-### Pull Requests
+### **Open Pull Requests**
 
-We encourage you to open pull requests, especially for issues tagged with the help-needed label.
+We encourage you to open PRs, especially for issues tagged with the `help-needed` label.
 
-### Community Support
+### **Community Support**
 
-Assist other users by participating in the issue tracker, and GitHub discussions. Your expertise can help others solve problems and improve their experience with Climonad.js.
+Engage with other developers by participating in discussions on the issue tracker and GitHub discussions. Your expertise helps improve the framework for everyone.
 
-## Resources
+---
 
-- [Deno Docs](https://docs.deno.com/)
+## **Resources**
+
+- [Deno Docs](https://deno.land/manual)
 - [Node.js Documentation](https://nodejs.org/docs/latest/api/)
 - [Vitest Documentation](https://vitest.dev/guide/)
 - [Rollup Documentation](https://rollupjs.org/introduction/)
 - [Eslint Documentation](https://eslint.org/)
 - [Prettier Documentation](https://prettier.io/docs/en/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
+
+---
+
+Thank you for contributing to Climonad.js! Your support is invaluable to the growth and success of this project.
