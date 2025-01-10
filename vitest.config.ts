@@ -9,6 +9,12 @@ export default defineConfig({
     include: ["test/**.test.ts"],
     coverage: {
       exclude: ["build/**", "dist/**", "node_modules/**", "test/**", "*.config.ts", "*.config.js"],
+      thresholds: {
+        functions: 90,
+        lines: 80,
+        statements: 80,
+        branches: 80,
+      },
     },
   },
 })
