@@ -78,11 +78,11 @@ export default defineConfig({
       {
         text: "API References",
         collapsed: false,
+
         items: [
-          { text: "CLI", link: "/docs/api-references/cli" },
-          { text: "Commands", link: "/docs/api-references/commands" },
-          { text: "Flags", link: "/docs/api-references/flags" },
-          { text: "Usage", link: "/docs/api-references/usage" },
+          { text: "Setup", link: "/api/Setup" },
+          { text: "Command", link: "/api/Command" },
+          { text: "Flag", link: "/api/Flag" },
         ],
       },
     ],

@@ -8,4 +8,5 @@ prev: false
 **Getting Started**
 
 - [Why Climonad](/docs/why-climonad)
-- [Getting Start](/docs/getting-started)
+- [Quick Start](/docs/quick-start)
+- [API Reference](/api/)
