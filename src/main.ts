@@ -1,3 +1,4 @@
-export { cmd, Command } from "./Command"
-export { bool, Flag, num, str } from "./Flag"
-export { cli, Setup, SetupConfig } from "./Setup"
+export { cli } from "./cli"
+export { Command, Flag, Parser, FlagConfig, ParserFn } from "./Parser"
+export { bool, str, num } from "./helpers/flags"
+export { cmd } from "./helpers/cmd"

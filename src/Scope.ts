@@ -1,153 +1,153 @@
-import { Command } from "./Command"
-import { Flag } from "./Flag"
+import { Command, Flag, ParsedArgs } from "./Parser"
 
-// === Scope Properties ===
-export class Scope {
-  private readonly flags: Map<string, number> = new Map()
-  private readonly commands: Map<string, number> = new Map()
+/**
+ * Manages a list of commands or flags, tracking required entries.
+ * @typeParam T - The entry type, either Command or Flag.
+ */
+export class Scope<T extends Command | Flag = Command | Flag> {
+  private readonly entries: T[] = []
+  private readonly entriesMap: Map<string, T> = new Map()
+  private readonly requiredEntriesIndex: number[] = []
 
-  private readonly flagsList: Flag[] = []
-  private readonly commandsList: Command[] = []
+  /**
+   * Checks if the given key exists in the scope.
+   * @param key - The key to look up.
+   * @returns True if key is present, false otherwise.
+   */
+  has(key: string): boolean {
+    return this.entriesMap.has(key)
+  }
 
-  private readonly requiredFlags: number[] = []
-  private readonly requiredCommands: number[] = []
+  /**
+   * Retrieves an entry by its key.
+   * @param key - The key of the entry to retrieve.
+   * @returns The entry if found, or undefined.
+   */
+  get(key: string): T | undefined {
+    return this.entriesMap.get(key)
+  }
 
-  private readonly flagsWithDefaultValues: number[] = []
+  /**
+   * Adds a new entry to the scope and maps its associated keys.
+   * @param entry - The command or flag to add.
+   * @param keys - The set of key variations to map to this entry.
+   */
+  add(entry: T, keys: Set<string>): void {
+    const index = this.entries.length
+    this.entries.push(entry)
 
-  private readonly commandsStack: number[] = []
+    for (const key of keys) {
+      this.entriesMap.set(key, entry)
+    }
 
-  private readonly usageReporters: Map<string, (command: Command) => Promise<void> | void> = new Map()
+    if (entry.required) this.requiredEntriesIndex.push(index)
+  }
 
-  // === Constructor ===
-  constructor() {}
+  /**
+   * Verifies that all required entries exist in the parsed arguments.
+   * @param args - A map of parsed flag values.
+   * @throws An error if a required entry is missing.
+   */
+  checkRequiredEntries(args: Map<string, any>): void {
+    for (const index of this.requiredEntriesIndex) {
+      const entry = this.entries[index]
+      if (!args.has(entry.name)) {
+        throw new Error(
+          `Missing required ${entry.type === "command" ? entry.type : `${entry.type} flag`}: ${entry.name}`,
+        )
+      }
+    }
+  }
+}
 
-  // === Debugging Methods ===
-  debug() {
-    return {
-      flagsList: this.flagsList,
-      commandsList: this.commandsList,
+/**
+ * Provides scoped management for commands and flags, tracking an active command scope.
+ */
+export class IntelliScope {
+  private readonly flagScopes: Scope<Flag>[] = []
+  private readonly commandScopes: Scope<Command>[] = []
+  private activeCommandScopeIndex = -1
 
-      flags: this.flags,
-      commands: this.commands,
+  private getEntryKeys<T extends { name: string; alias?: string | string[]; prefix?: string; aliasPrefix?: string }>(
+    entry: T,
+  ): Set<string> {
+    const keys = new Set([`${entry.prefix || ""}${entry.name}`])
 
-      requiredFlags: this.requiredFlags,
-      requiredCommands: this.requiredCommands,
+    if (entry.alias) {
+      const aliasList = Array.isArray(entry.alias) ? entry.alias : [entry.alias]
+      for (const alias of aliasList) {
+        keys.add(`${entry.aliasPrefix || ""}${alias}`)
+      }
+    }
 
-      commandsStack: this.commandsStack,
+    return keys
+  }
 
-      usageReporters: this.usageReporters,
+  /**
+   * Locates a command or flag in the most recent scope, updating the active scope.
+   * @param key - The key to look up.
+   * @returns The matching command or flag, or null if none found.
+   */
+  findEntry(key: string): Command | Flag | null {
+    const latestCommandScope = this.commandScopes[this.commandScopes.length - 1]
+    if (latestCommandScope?.has(key) && this.activeCommandScopeIndex !== this.commandScopes.length - 1) {
+      this.activeCommandScopeIndex = this.commandScopes.length - 1
+      return latestCommandScope.get(key) || null
+    }
+
+    for (const scope of this.flagScopes) {
+      const entry = scope.get(key)
+      if (entry) return entry
+    }
+
+    return null
+  }
+
+  /**
+   * Creates a new scope from the given entries.
+   * @param entries - The commands or flags to include in this scope.
+   * @returns A Scope instance or null if no entries are provided.
+   */
+  createScope<T extends Command | Flag>(entries?: T[]): Scope<T> | null {
+    if (!entries) return null
+
+    const scope = new Scope<T>()
+    for (const item of entries) {
+      scope.add(item, this.getEntryKeys(item))
+    }
+    return scope
+  }
+
+  /**
+   * Builds command and flag scopes from arrays of commands or flags.
+   * @param commands - An optional array of command definitions.
+   * @param flags - An optional array of flag definitions.
+   */
+  create(commands?: Command[], flags?: Flag[]): void {
+    const commandScope = this.createScope(commands)
+    const flagScope = this.createScope(flags)
+
+    if (commandScope) this.commandScopes.push(commandScope)
+    if (flagScope) this.flagScopes.push(flagScope)
+  }
+
+  /**
+   * Checks for any missing requirements in the provided scopes.
+   * @param parsedArgs - The parsed arguments to validate.
+   * @param scopes - The relevant scopes to check for requirements.
+   */
+  hasMissingRequirements(parsedArgs: ParsedArgs, scopes: Scope[]): void {
+    for (const scope of scopes) {
+      scope.checkRequiredEntries(parsedArgs.flags)
     }
   }
 
-  // === Flag Management Methods ===
-  forEachRequiredFlag(callback: (flag: Flag, index: number) => void): void {
-    for (const index of this.requiredFlags) {
-      callback(this.flagsList[index], index)
-    }
-  }
-
-  forEachFlagWithDefaultValue(callback: (flag: Flag, index: number) => void): void {
-    for (const index of this.flagsWithDefaultValues) {
-      callback(this.flagsList[index], index)
-    }
-  }
-
-  // === Command Management Methods ===
-  forEachRequiredCommand(callback: (command: Command, index: number) => void): void {
-    for (const index of this.requiredCommands) {
-      callback(this.commandsList[index], index)
-    }
-  }
-
-  // === Usage Reporter Management Methods ===
-  setUsageReporter(name: string, reporter: (command: Command) => Promise<void> | void): void {
-    this.usageReporters.set(name, reporter)
-  }
-
-  hasUsageReporter(name: string): boolean {
-    return this.usageReporters.has(name)
-  }
-
-  getUsageReporter(name: string): (command: Command) => Promise<void> | void {
-    return this.usageReporters.get(name)!
-  }
-
-  // === General Utility Methods ===
-  has(key: number): boolean {
-    return this.flagsList[key] !== undefined || this.commandsList[key] !== undefined
-  }
-
-  hasFlag(key: string): boolean {
-    return this.flags.has(key)
-  }
-
-  hasCmd(key: string): boolean {
-    return this.commands.has(key)
-  }
-
-  getFlagIndex(key: string): number | null {
-    return this.flags.get(key) ?? null
-  }
-
-  getCmdIndex(key: string): number | null {
-    return this.commands.get(key) ?? null
-  }
-
-  getFlag(key: string): Flag | null {
-    return (this.flagsList[this.getFlagIndex(key)!] as Flag) ?? null
-  }
-
-  getCmd(key: string): Command | null {
-    return (this.commandsList[this.getCmdIndex(key)!] as Command) ?? null
-  }
-
-  // === Methods to Add Flags and Commands ===
-  addFlag(entry: Flag): void {
-    // Ensure the entry is an instance of Flag before adding
-    if (!(entry instanceof Flag)) {
-      throw new Error("Failed to add flag: entry is not an instance of Flag")
-    }
-
-    const { key, alias } = { key: `--${entry.name}`, alias: entry.alias ? `-${entry.alias}` : undefined }
-    const index = this.flagsList.length
-
-    // Map flag keys and aliases to their index
-    this.flags.set(key, index)
-
-    if (alias) this.flags.set(alias, index)
-
-    // Track required flags
-    if (entry.required) this.requiredFlags.push(index)
-
-    // Track flags with default values
-    if (entry.default !== undefined) this.flagsWithDefaultValues.push(index)
-
-    // Add the flag to the flags list
-    this.flagsList[index] = entry
-  }
-
-  addCmd(entry: Command): void {
-    // Ensure the entry is an instance of Command before adding
-    if (!(entry instanceof Command)) {
-      throw new Error("Failed to add command: entry is not an instance of Command")
-    }
-
-    const { key, alias } = { key: entry.name, alias: entry.alias }
-    const index = this.commandsList.length
-
-    // Map command keys and aliases to their index
-    this.commands.set(key, index)
-
-    if (alias) this.commands.set(alias, index)
-
-    // Track required commands
-    if (entry.required) this.requiredCommands.push(index)
-
-    // Set usage reporter if defined
-    if (typeof entry.onUsageReporter === "function") this.setUsageReporter(entry.name, entry.onUsageReporter)
-
-    // Add the command to the commands list and stack
-    this.commandsList[index] = entry
-    this.commandsStack.push(index)
+  /**
+   * Validates all required commands and flags across registered scopes.
+   * @param parsedArgs - The parsed arguments to validate.
+   */
+  validateAll(parsedArgs: ParsedArgs): void {
+    this.hasMissingRequirements(parsedArgs, this.flagScopes)
+    this.hasMissingRequirements(parsedArgs, this.commandScopes)
   }
 }
