@@ -64,44 +64,41 @@ export class Parser {
     return this.parseResult
   }
 
-  private setFlagValue(flagName: string, value: FlagValue): void {
+  private storeFlagValue(flagName: string, value: FlagValue): void {
     this.parseResult.flags.set(flagName, value)
   }
 
-  current() {
+  currentToken() {
     return this.argv[this.index]
   }
 
-  next() {
+  nextToken() {
     return this.argv[this.index + 1]
   }
 
-  hasNext() {
-    return this.index <= this.next.length
+  hasMoreTokens() {
+    // Improved: check if index is within argv bounds.
+    return this.index < this.argv.length
   }
 
   incrementIndex() {
     return this.index++
   }
 
-  setIndex(index: number) {
-    this.index = index
-  }
-
   search(key: string) {
     return this.scope.findEntry(key)
   }
 
-  createScope<T extends { flags?: any[]; commands?: any[] }>(entry: T) {
+  setUpScope<T extends { flags?: any[]; commands?: any[] }>(entry: T) {
     this.scope.create(entry.commands, entry.flags)
   }
 
-  updateScope(entry: { commands?: any[]; flags?: any[]; name: string; action?: any }) {
+  updateScopeWithCommand(entry: { commands?: any[]; flags?: any[]; name: string; action?: any }) {
     this.parseResult.commands.set(entry.name, entry.action)
-    this.createScope(entry)
+    this.setUpScope(entry)
   }
 
-  validateAll(parseResult: ParseResult) {
+  validateScope(parseResult: ParseResult) {
     this.scope.validateAll(parseResult)
   }
 
@@ -109,76 +106,79 @@ export class Parser {
     return this.parseResult.flags.has("help")
   }
 
-  static parse = async <T extends ParserConfig>(
+  static parseInput = async <T extends ParserConfig>(
     argv: string[],
     config: T,
     event: Event,
   ): Promise<ParseResult | null> => {
     const parser = new Parser(argv, config.startIndex || 2, event)
 
-    parser.createScope(config)
+    parser.setUpScope(config)
 
+    // Setup help usage handler if provided.
     if (config.usageHandler) {
       parser.event.on("help", async () => await config.usageHandler?.(new Command(config)))
     }
 
-    while (parser.hasNext()) {
-      const token = parser.current()
-      const entry = parser.search(token)
+    while (parser.hasMoreTokens()) {
+      const token = parser.currentToken()
 
+      // Early exit if help flag is detected.
       if (parser.hasHelpFlag()) {
         parser.event.emitLast("help")
         return null
       }
 
+      // Handle empty token gracefully.
       if (!token) {
         break
       }
 
+      // Retrieve command or flag entry from scope.
+      const entry = parser.search(token)
+
+      // Process flag entries.
       if (entry instanceof Flag) {
-        await parser.parseFlag(entry, parser)
+        await parser.handleFlag(entry)
         continue
       }
 
+      // Process command entries.
       if (entry instanceof Command) {
-        await parser.parseCommand(entry, parser, config)
+        await parser.handleCommand(entry, config)
         continue
       }
 
+      // Unknown token encountered.
       throw CliError.unknownCommandOrFlag(token)
     }
 
-    parser.validateAll(parser.result)
-
+    parser.validateScope(parser.result)
     return parser.result
   }
 
-  private async parseFlag<T>(flag: Flag<T>, parser: Parser): Promise<void> {
-    const value = await flag.parser.call(parser, flag)
-
+  private async handleFlag<T = FlagValue>(flag: Flag<T>): Promise<void> {
+    const value = await flag.parser.call(this, flag)
     if (value != null) {
-      this.setFlagValue(flag.name, value as FlagValue)
+      this.storeFlagValue(flag.name, value as FlagValue)
       this.incrementIndex()
       return
     }
-
     throw CliError.missingRequiredFlag(flag.name)
   }
 
-  private async parseCommand(command: Command, parser: Parser, config: ParserConfig): Promise<void> {
-    parser.updateScope(command)
-    parser.incrementIndex()
-
+  private async handleCommand(command: Command, config: ParserConfig): Promise<void> {
+    this.updateScopeWithCommand(command)
+    this.incrementIndex()
     if (command.action) {
-      parser.event.on("run", async () => await command.action?.(parser.result, command.name))
+      this.event.on("run", async () => await command.action?.(this.result, command.name))
     }
-
-    parser.event.on("help", async () => await (command.usageHandler ?? config.usageHandler)?.(command))
+    this.event.on("help", async () => await (command.usageHandler ?? config.usageHandler)?.(command))
   }
 }
 
 // === Default Parser Function ===
-export const defaultParser: FlagParser<any> = async function () {
+export const noopParser: FlagParser<any> = async function () {
   throw CliError.missingImplementation()
 }
 
@@ -201,7 +201,7 @@ export class Flag<T = FlagValue> implements BaseEntry {
     this.required = config.required || false
     this.default = config.default
     this.alias = config.alias
-    this.parser = config.parser || defaultParser
+    this.parser = config.parser || noopParser
     this.prefix = config.prefix || "--"
     this.aliasPrefix = config.aliasPrefix || "-"
   }
