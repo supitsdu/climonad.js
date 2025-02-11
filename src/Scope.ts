@@ -1,4 +1,4 @@
-import { Command, Flag, ParsedArgs } from "./Parser"
+import { Command, Flag, ParseResult } from "./Parser"
 
 /**
  * Manages a scope of commands or flags using Registry Instance List (RIL) and
@@ -139,7 +139,7 @@ export class IntelliScope {
    * @param parsedArgs - The parsed arguments to validate.
    * @param scopes - The relevant scopes to check for requirements.
    */
-  hasMissingRequirements(parsedArgs: ParsedArgs, scopes: Scope[]): void {
+  hasMissingRequirements(parsedArgs: ParseResult, scopes: Scope[]): void {
     for (const scope of scopes) {
       scope.checkRequiredEntries(parsedArgs.flags)
     }
@@ -149,7 +149,7 @@ export class IntelliScope {
    * Validates all required commands and flags across registered scopes.
    * @param parsedArgs - The parsed arguments to validate.
    */
-  validateAll(parsedArgs: ParsedArgs): void {
+  validateAll(parsedArgs: ParseResult): void {
     this.hasMissingRequirements(parsedArgs, this.flagScopes)
     this.hasMissingRequirements(parsedArgs, this.commandScopes)
   }
