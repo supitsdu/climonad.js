@@ -1,56 +1,59 @@
 import { Command, Flag, ParsedArgs } from "./Parser"
 
 /**
- * Manages a list of commands or flags, tracking required entries.
+ * Manages a scope of commands or flags using Registry Instance List (RIL) and
+ * Tokenized Indexization Map (TIMap) for efficient lookup.
  * @typeParam T - The entry type, either Command or Flag.
  */
 export class Scope<T extends Command | Flag = Command | Flag> {
-  private readonly entries: T[] = []
-  private readonly entriesMap: Map<string, T> = new Map()
-  private readonly requiredEntriesIndex: number[] = []
+  // Registry Instance List (RIL) - Stores actual instances
+  private readonly registryInstanceList: T[] = []
+
+  // Tokenized Indexization Map (TIMap) - Maps tokens to RIL indices
+  private readonly tokenizedIndexMap: Map<string, number> = new Map()
+
+  // Required Tokens List (RTL) - Stores indices of required instances
+  private readonly requiredTokensList: number[] = []
 
   /**
-   * Checks if the given key exists in the scope.
-   * @param key - The key to look up.
-   * @returns True if key is present, false otherwise.
+   * Checks if the given token exists in the scope.
    */
-  has(key: string): boolean {
-    return this.entriesMap.has(key)
+  has(token: string): boolean {
+    return this.tokenizedIndexMap.has(token)
   }
 
   /**
-   * Retrieves an entry by its key.
-   * @param key - The key of the entry to retrieve.
-   * @returns The entry if found, or undefined.
+   * Retrieves an entry by its token.
    */
-  get(key: string): T | undefined {
-    return this.entriesMap.get(key)
+  get(token: string): T | undefined {
+    const index = this.tokenizedIndexMap.get(token)
+    return index !== undefined ? this.registryInstanceList[index] : undefined
   }
 
   /**
-   * Adds a new entry to the scope and maps its associated keys.
-   * @param entry - The command or flag to add.
-   * @param keys - The set of key variations to map to this entry.
+   * Adds a new entry to the scope and maps its associated tokens.
    */
-  add(entry: T, keys: Set<string>): void {
-    const index = this.entries.length
-    this.entries.push(entry)
+  add(entry: T, tokens: Set<string>): void {
+    const index = this.registryInstanceList.length
+    this.registryInstanceList.push(entry)
 
-    for (const key of keys) {
-      this.entriesMap.set(key, entry)
+    // Map all tokens to the same index in RIL
+    for (const token of tokens) {
+      this.tokenizedIndexMap.set(token, index)
     }
 
-    if (entry.required) this.requiredEntriesIndex.push(index)
+    // Add to RTL if required
+    if (entry.required) {
+      this.requiredTokensList.push(index)
+    }
   }
 
   /**
    * Verifies that all required entries exist in the parsed arguments.
-   * @param args - A map of parsed flag values.
-   * @throws An error if a required entry is missing.
    */
   checkRequiredEntries(args: Map<string, any>): void {
-    for (const index of this.requiredEntriesIndex) {
-      const entry = this.entries[index]
+    for (const index of this.requiredTokensList) {
+      const entry = this.registryInstanceList[index]
       if (!args.has(entry.name)) {
         throw new Error(
           `Missing required ${entry.type === "command" ? entry.type : `${entry.type} flag`}: ${entry.name}`,
@@ -61,26 +64,26 @@ export class Scope<T extends Command | Flag = Command | Flag> {
 }
 
 /**
- * Provides scoped management for commands and flags, tracking an active command scope.
+ * Manages multiple scopes with enhanced token-based lookup.
  */
 export class IntelliScope {
   private readonly flagScopes: Scope<Flag>[] = []
   private readonly commandScopes: Scope<Command>[] = []
   private activeCommandScopeIndex = -1
 
-  private getEntryKeys<T extends { name: string; alias?: string | string[]; prefix?: string; aliasPrefix?: string }>(
+  private generateTokens<T extends { name: string; alias?: string | string[]; prefix?: string; aliasPrefix?: string }>(
     entry: T,
   ): Set<string> {
-    const keys = new Set([`${entry.prefix || ""}${entry.name}`])
+    const tokens = new Set([`${entry.prefix || ""}${entry.name}`])
 
     if (entry.alias) {
       const aliasList = Array.isArray(entry.alias) ? entry.alias : [entry.alias]
       for (const alias of aliasList) {
-        keys.add(`${entry.aliasPrefix || ""}${alias}`)
+        tokens.add(`${entry.aliasPrefix || ""}${alias}`)
       }
     }
 
-    return keys
+    return tokens
   }
 
   /**
@@ -113,7 +116,7 @@ export class IntelliScope {
 
     const scope = new Scope<T>()
     for (const item of entries) {
-      scope.add(item, this.getEntryKeys(item))
+      scope.add(item, this.generateTokens(item))
     }
     return scope
   }
