@@ -16,7 +16,7 @@ export function cli(setupOptions: SetupOptions) {
   return {
     run: async (processArgv: string[]) => {
       const events = new Event()
-      const parsedArgs = await Parser.parse(processArgv, options, events)
+      const parsedArgs = await Parser.parseInput(processArgv, options, events)
       if (parsedArgs) {
         events.emit("run")
       }
