@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { CLIError, CLIErrorHandler, defaultMessages, errorHandler, type ErrorArgsMap } from "../../src/errors"
+import { CLIError, CLIErrorHandler, defaultMessages, errorHandler, type ErrorCodes } from "../../src/errors"
 
 describe("CLIErrorHandler", () => {
   // Test fixtures to reduce repetition
@@ -135,9 +135,9 @@ describe("CLIErrorHandler", () => {
       expect(error.message).toBe(defaultMessages.TOKEN_BAD_FORMAT("test"))
     })
 
-    it("should be properly typed with ErrorArgsMap", () => {
+    it("should be properly typed with ErrorCodes", () => {
       // This is a type check that ensures errorHandler is properly typed
-      const isErrorHandler: CLIErrorHandler<ErrorArgsMap> = errorHandler
+      const isErrorHandler: CLIErrorHandler<ErrorCodes> = errorHandler
       expect(isErrorHandler).toBe(errorHandler)
     })
   })
