@@ -1,6 +1,6 @@
 import { defaultMessages, DefaultMessages } from "./messages"
 
-export type ErrorArgsMap = {
+export type ErrorCodes = {
   [K in keyof DefaultMessages]: Parameters<DefaultMessages[K]>
 }
 
@@ -15,7 +15,7 @@ export class CLIError<T extends Record<string, unknown[]>> extends Error {
   }
 }
 
-export class CLIErrorHandler<T extends Record<string, unknown[]> = ErrorArgsMap> {
+export class CLIErrorHandler<T extends Record<string, unknown[]> = ErrorCodes> {
   private messages: Partial<{
     [K in keyof T]: (...args: T[K]) => string
   }> = {}
@@ -32,4 +32,4 @@ export class CLIErrorHandler<T extends Record<string, unknown[]> = ErrorArgsMap>
   }
 }
 
-export const errorHandler = new CLIErrorHandler<ErrorArgsMap>(defaultMessages)
+export const errorHandler = new CLIErrorHandler<ErrorCodes>(defaultMessages)

@@ -16,6 +16,7 @@ export interface CLIConstructorOptions extends CLIOptions {
 
 export class CLI<FlagTypes extends Record<string, unknown> = Record<string, unknown>> extends CLINode {
   private readonly helpToken: string
+  private readonly showHelp: boolean
   public readonly helpReporter: HelpReporter
 
   constructor(options: CLIConstructorOptions) {
@@ -23,6 +24,7 @@ export class CLI<FlagTypes extends Record<string, unknown> = Record<string, unkn
     super(options.registry, null, errorHandler)
     this.registry.initialize(options)
     this.helpToken = typeof options.help === "string" ? options.help : "help"
+    this.showHelp = options.help === true || typeof options.help === "string"
     this.helpReporter =
       options.helpReporter ||
       (() => {
@@ -49,7 +51,7 @@ export class CLI<FlagTypes extends Record<string, unknown> = Record<string, unkn
     for (const index of indices) {
       const entry = this.registry.nodes[index]
 
-      if (entry.name === this.helpToken) {
+      if (entry.name === this.helpToken && entry.value === true && this.showHelp) {
         reportHelp = true
       }
 
