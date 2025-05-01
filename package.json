@@ -1,7 +1,7 @@
 {
   "name": "climonad",
-  "version": "0.4.0",
-  "description": "A feature-rich framework for building structured and maintainable command-line tools",
+  "version": "1.0.0-alpha.1",
+  "description": "A minimal, fast, and scalable CLI framework built on functional programming and type-safe design",
   "main": "./dist/main.cjs",
   "type": "module",
   "module": "./dist/main.mjs",
