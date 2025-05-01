@@ -1,7 +1,7 @@
 import { CLIDefinition, CLIEntryPreset, CLIParser } from "../types"
 import { CLINode } from "./node"
 
-function createPreset<T>(
+export function createPreset<T>(
   kind: "command" | "flag",
   config: CLIDefinition<T>,
   parser: CLIParser<T> | null,
