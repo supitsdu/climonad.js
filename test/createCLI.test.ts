@@ -129,7 +129,7 @@ describe("createCLI", () => {
       {
         name: "help request",
         input: ["help"],
-        mockNodes: [{ index: 0, name: "help", kind: "command" }],
+        mockNodes: [{ index: 0, name: "help", kind: "command", value: true }],
         mockIndices: [0],
         expected: {
           flags: new Map(),
@@ -176,6 +176,7 @@ describe("createCLI", () => {
           name: "test-cli",
           description: "Test CLI",
           registry: mockRegistry as any,
+          help: true,
           helpReporter: vi.fn(),
         })
 
