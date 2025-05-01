@@ -5,13 +5,13 @@ export { CLIParser, CLIRegistry } from "./core"
 export { CLIEntry, CLIResult, CLIAction, CLIDefinition } from "./types"
 
 // CLI main class
-export { CLI, createCLI } from "./createCLI"
+export { CLI, createCLI, CLIOptions } from "./createCLI"
 
 // Node presets
 export { cmd, num, bool, str } from "./nodes"
 
 // UI exports
-export { CLIHelpConstructor } from "./ui"
+export { CLIHelpConstructor, HelpReporter } from "./ui"
 
 // Error handling
-export { CLIErrorHandler } from "./errors"
+export { CLIErrorHandler, CLIError, DefaultMessages } from "./errors"
