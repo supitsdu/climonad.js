@@ -9,145 +9,330 @@
 
 ---
 
-A minimal, fast, and scalable CLI framework built on functional programming and type-safe design. Offers a clean, declarative API without boilerplate or opinions—just the essentials for building robust command-line tools.
+A no-nonsense, zero-dependency CLI framework for developers who prefer their tools lean, typed, and composable. Climonad won’t hold your hand—but it won’t get in your way, either.
 
-Don’t let the simplicity fool you. Climonad handles the hard stuff under the hood: nested commands, scoped flags, safe parsing, and isolation for increased testability — without introducing runtime complexity. It’s one of the few CLI frameworks that gets type safety, modular design, and developer ergonomics right, all at once.
+Most CLI frameworks overpromise and underdeliver. Climonad does neither. It gives you a clean, type-safe foundation to build powerful CLIs **_your way_**—without the bloat or boilerplate.
+
+Functional where it counts. Testable by default. Easy to start, endlessly flexible. No fluff. No footguns.
 
 ---
 
-## Quick Start
+## 🧠 Why?
 
-### 1. Define the CLI Application
+Built for developers who want complete control over their CLI tools. It avoids magic, embraces type safety, and scales from tiny scripts to full-featured CLIs without dragging opinions along.
+
+---
+
+## ⚙️ Setup In Four Steps
+
+Get rolling fast without hidden complexity. Define what you need, skip what you don’t.
+
+### 1. Define the CLI App
 
 ```ts
 // cli.ts
 import { createCLI } from "climonad"
 
 export const cli = createCLI({
-  name: "my-cli",
-  description: "A powerful CLI application",
-  version: "1.0.0",
+  name: "example-cli",
+  description: "An example CLI application",
 })
 ```
 
-### 2. Add a Command
+### 2. Define Your Flags
 
 ```ts
-// commands.ts
-import { str, num, bool } from "climonad"
+// flags.ts
+import { bool } from "climonad"
+
+export const helpFlag = bool({
+  name: "help",
+  description: "Display help information",
+  default: false,
+  aliases: ["h"],
+})
+
+export const verboseFlag = bool({
+  name: "verbose",
+  description: "Verbose mode",
+  default: false,
+  aliases: ["v"],
+})
+```
+
+### 3. Register Commands
+
+```ts
+// command.ts
 import { cli } from "./cli"
 
-export const run = cli.cmd({
+export const runCmd = cli.cmd({
   name: "run",
   description: "Run the application",
-  action(flags) {
-    console.log("Running with options:", flags.getAll())
-    return { success: true }
+  action: async (args) => {
+    console.log("Running the application with args:", args)
+  },
+})
+
+export const testCmd = runCmd.cmd({
+  name: "test",
+  description: "Test the application",
+  action: async (args) => {
+    console.log("Testing the application with args:", args)
   },
 })
 ```
 
-### 3. Run the CLI
+### 4. Wire It Up
 
 ```ts
 // index.ts
 import { cli } from "./cli"
-import "./commands" // Registers your command definitions
+import "./command"
+import { helpFlag, verboseFlag } from "./flags"
 
-cli.run(process.argv.slice(2)).catch((e) => console.error(e))
+cli.use(helpFlag, verboseFlag)
+
+cli.run(process.argv.slice(2)).catch((error) => {
+  console.error("Error running CLI:", error)
+  process.exit(1)
+})
 ```
 
 ---
 
-## Defining Flags
+## 🧾 You Control Help Output
 
-Climonad provides built-in types for common flag values:
+Climonad doesn’t guess what your help experience should look like. If users ask for help and you haven’t defined how to show it, that’s on purpose. You’re in charge of what’s printed.
+
+### 1. Create a Help Reporter
 
 ```ts
-import { str, num, bool } from "climonad"
-import { cli } from "./cli"
+// help.ts
+import { CLIHelpConstructor } from "climonad"
 
-cli.use(
-  str({
-    name: "env",
-    aliases: ["e"],
-    description: "Target environment",
-    default: "development",
-    required: true,
-  }),
+export const helpReporter = ({ commands, flags, root }: CLIHelpConstructor) => {
+  console.log(`\n${root.name} - ${root.description}\n`)
 
-  num({
-    name: "port",
-    aliases: ["p"],
-    description: "Port number",
-    default: 3000,
-  }),
+  if (commands.length > 0) {
+    console.log("Commands:")
+    for (const cmd of commands) {
+      console.log(`  ${cmd.name}  - ${cmd.description}`)
+    }
+  }
 
-  bool({
-    name: "force",
-    aliases: ["f"],
-    description: "Force the operation",
-    default: false,
-  }),
-)
+  if (flags.length > 0) {
+    console.log("\nFlags:")
+    for (const flag of flags) {
+      console.log(`  --${flag.name}  - ${flag.description}`)
+    }
+  }
+
+  console.log("")
+}
 ```
+
+### 2. Plug It In
+
+```ts
+// cli.ts
+import { createCLI } from "climonad"
+import { helpReporter } from "./help"
+
+export const cli = createCLI({
+  name: "example-cli",
+  description: "An example CLI application",
+  help: true,
+  helpReporter,
+})
+```
+
+### 🛎️ Change the Help Flag
+
+Want `--assist` instead of `--help`? Easy:
+
+```ts
+help: "assist"
+```
+
+Now your users run:
+
+```bash
+example-cli --assist
+```
+
+> [!WARNING]
+> If you don't supply a `helpReporter`, help output won't be shown—even if `help` is enabled.
 
 ---
 
-## Defining Subcommands
+## 💥 Make Errors Yours
 
-Build nested command structures to support more complex CLI tools:
+Don’t let unhandled errors ruin the CLI experience. Climonad lets you define responses for common CLI mistakes so your tool speaks your language—not ours.
+
+### 1. Define the Handler
 
 ```ts
-import { cli } from "./cli"
+// errors.ts
+import { CLIErrorHandler, ErrorCodes } from "climonad"
 
-const database = cli.cmd({
-  name: "db",
-  description: "Database operations",
+export const errorHandler = new CLIErrorHandler<ErrorCodes>({
+  TOKEN_NOT_FOUND: (token, nodes) => {
+    const suggestions = nodes
+      ?.filter((node) => node.name.startsWith(token))
+      .map((node) => node.name)
+      .join(", ")
+
+    return `Unknown token \"${token}\". Did you mean: ${suggestions}?`
+  },
+
+  REQ_FLAG_MISSING: (flagName) => `Oops! The flag \"--${flagName}\" is required.`,
+})
+```
+
+### 2. Hook It Up
+
+```ts
+// cli.ts
+import { createCLI } from "climonad"
+import { errorHandler } from "./errors"
+
+export const cli = createCLI({
+  name: "example-cli",
+  description: "An example CLI application",
+  errorHandler,
+})
+```
+
+### 🧠 When To Customize
+
+Custom error handlers shine when:
+
+- You want error messages in a specific tone or language
+- Your CLI targets less technical users
+- You want to plug in logging or telemetry
+
+> [!NOTE]
+> Unhandled errors fall back to default Climonad messaging.
+
+---
+
+## 🧬 Deeply Nested Commands
+
+Most CLI frameworks stop at subcommands. Climonad goes further.
+
+Commands can nest indefinitely, allowing you to structure large command trees in clean, composable layers. Whether you’re building a microservice runner, deployment pipeline, or multi-utility toolkit, you won’t hit a wall.
+
+### Example
+
+```ts
+const root = createCLI({ name: "cli" })
+
+const user = root.cmd({
+  name: "user",
+  description: "Manage users",
 })
 
-database.cmd({
-  name: "migrate",
-  description: "Run database migrations",
-  action(flags) {
-    console.log("Running migrations on", flags.get("database"))
+const create = user.cmd({
+  name: "create",
+  description: "Create a user",
+  action: () => {
+    console.log("User created!")
   },
 })
 
-database.cmd({
-  name: "backup",
-  description: "Backup the database",
-  action(flags) {
-    console.log("Backing up to", flags.get("output"))
+const admin = create.cmd({
+  name: "admin",
+  description: "Create an admin user",
+  action: () => {
+    console.log("Admin user created!")
   },
 })
 ```
 
----
+Your CLI can now handle:
 
-## Why?
+```bash
+cli user create admin
+```
 
-- 🧩 **Composable Design** – Use functional patterns to build scalable, nested commands.
-- 🧪 **Testable by Default** – Commands are defined independently for easier unit testing.
-- ⚡ **Lightweight & Fast** – Zero dependencies, minimal runtime overhead.
-- 🧱 **Modular Architecture** – Reuse commands and flags across projects with clean separation.
-- ✍️ **Declarative API** – Clear, predictable structure with minimal boilerplate.
-- 🛠️ **Built-in Error Handling** – Structured, user-friendly error messages out of the box.
+Climonad doesn't impose limits on depth or nesting, so you can model your CLI the way your users think—not the way your framework dictates.
 
 ---
 
-## Contributing
+## 🧩 Define Custom Entry Presets
 
-Contributions are welcome. Please see our [Contributing Guide](./CONTRIBUTING.md) to learn how to get involved.
+If you want to create reusable validation logic for flags, `createPreset` is your tool.
+
+> [!IMPORTANT]
+> Climonad doesn't yet support positional arguments or lists out of the box, but presets give you composable power now.
+
+### Example: Hex Color Flag
+
+```ts
+// presets.ts
+import { CLIDefinition, CLIEntryPreset } from "climonad"
+import { CLI } from "climonad"
+import { createPreset } from "climonad"
+
+export function hex(config: CLIDefinition<string>): CLIEntryPreset<string> {
+  return createPreset("flag", config, (input) => {
+    const hexRegex = /^#?[0-9A-Fa-f]+$/
+    return hexRegex.test(input) ? CLI.Ok(input) : CLI.Error(null)
+  })
+}
+```
+
+### Use It
+
+```ts
+export const colorFlag = hex({
+  name: "color",
+  description: "Set the color",
+  default: "#000000",
+  required: true,
+  aliases: ["c"],
+})
+```
+
+Presets are the preferred way to express custom validations currently.
 
 ---
 
-## Security
+## 🎯 Let’s Be Real
 
-To report security issues or vulnerabilities, please refer to our [Security Policy](./SECURITY.md).
+> [!CAUTION]
+> Climonad is optimized, but no abstraction is free. Here's where performance could take a hit:
+>
+> - **Deep Command Nesting** – While supported, very deep command trees can add processing overhead.
+> - **Large Token Sets** – Matching against many tokens might introduce delays.
+> - **Complex Requirements** – Intricate validation logic may slow down command resolution.
+
+### In Practice
+
+> [!TIP]
+> Climonad is built with fast initialization and predictable performance in mind:
+>
+> - **Time Complexity**: O(1) to O(n) depending on input size.
+> - **Space Complexity**: Linear with respect to commands and flags.
+> - **Runtime**: Constant-time lookups and efficient traversal.
+
+It's designed for real-world use—fast enough for scripts, structured enough for full CLI suites.
 
 ---
 
-## License
+## 🤝 Open to Ideas
+
+Whether it’s a sharp bug fix, a novel feature idea, or just feedback on the philosophy—PRs and issues welcome. Check the [Contributing Guide](./CONTRIBUTING.md) before you dive in.
+
+---
+
+## 🔐 Responsible Disclosure
+
+To report vulnerabilities or sensitive issues, please read our [Security Policy](./SECURITY.md).
+
+---
+
+## 📄 License
 
 Released under the [MIT License](./LICENSE).
