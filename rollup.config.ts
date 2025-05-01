@@ -7,7 +7,7 @@ const external = []
 
 export default [
   {
-    input: ["src/main.ts"],
+    input: ["src/index.ts"],
     plugins: [typescript(), reportDetails()],
     output: { dir: "build", format: "es", exports: "auto" },
     external,

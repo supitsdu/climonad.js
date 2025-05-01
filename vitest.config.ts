@@ -1,4 +1,4 @@
-import { defineConfig } from "vite"
+import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   root: ".",
@@ -6,9 +6,11 @@ export default defineConfig({
     watch: false,
     name: "cli",
     environment: "node",
-    include: ["test/**.test.ts"],
+    include: ["test/**/*.test.ts"],
     coverage: {
+      provider: "v8",
       exclude: ["build/**", "dist/**", "node_modules/**", "test/**", "*.config.ts", "*.config.js"],
+      reporter: ["text", "json", "html"],
       thresholds: {
         functions: 90,
         lines: 80,
