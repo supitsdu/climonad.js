@@ -1,12 +1,22 @@
 # Contributing
 
-Contributions are welcome! Whether you’re fixing a bug, suggesting a feature, or improving documentation, your help is much appreciated.
+Contributions are welcome! Whether you're fixing a bug, suggesting a feature, or improving documentation, your help is much appreciated.
+
+Please note that this project has a [Code of Conduct](./CODE_OF_CONDUCT.md), which all contributors are expected to follow.
 
 ---
 
-## **Introduction**
+## **Goal**
 
-The goal behind creating this framework was to provide an additional layer of modularization, performance, security, and usability to help developers worldwide write small or large Node.js CLI tools effortlessly.
+Climonad.js aims to provide a functional programming library that focuses on monadic operations and control flow abstractions. Our goal is to create a lightweight, efficient, and type-safe library that helps developers write more maintainable, composable, and error-resistant code across both Deno and Node.js environments.
+
+We prioritize:
+
+- Type safety and comprehensive TypeScript support
+- High performance with minimal overhead
+- Clear documentation and examples
+- Cross-platform compatibility
+- Adherence to functional programming principles
 
 ---
 
@@ -23,12 +33,20 @@ The goal behind creating this framework was to provide an additional layer of mo
    ```bash
    git checkout -b feat/my-feature
    ```
+   Branch naming conventions:
+   - `feat/` - For new features
+   - `fix/` - For bug fixes
+   - `docs/` - For documentation changes
+   - `refactor/` - For code refactoring
+   - `test/` - For adding or improving tests
+   - `chore/` - For build process or tooling changes
 4. **Make changes, commit, and push**:
    ```bash
    git add .
    git commit -m "feat: add a cool feature"
    git push origin feat/my-feature
    ```
+   We follow [Conventional Commits](https://www.conventionalcommits.org/) for all commit messages.
 5. **Open a pull request**: Compare your branch against `main` in the original repository and submit your PR.
 
 ---
@@ -94,27 +112,6 @@ For performance improvements, run benchmarks using **Deno's bench tool**:
   ```bash
   npm run bench
   ```
-
----
-
-### **Project Structure**
-
-```plaintext
-src/
-    Command.ts               # Command definition logic
-    Flag.ts                  # Flag definition logic
-    main.ts                  # Exposes public API
-    Scope.ts                 # Scope management logic
-    Setup.ts                 # CLI setup management logic
-    types.ts                 # Type definitions
-test/
-    bench.ts                 # Benchmark tests
-    Command.test.ts          # Tests for Command definition
-    Flag.test.ts             # Tests for Flag definition
-    Scope.test.ts            # Tests for Scope management
-    Setup.test.ts            # Tests for CLI setup
-    types.test.ts            # Tests for type definitions
-```
 
 ---
 
