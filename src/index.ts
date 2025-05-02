@@ -14,4 +14,4 @@ export { cmd, num, bool, str, createPreset } from "./nodes"
 export { CLIHelpConstructor, HelpReporter } from "./ui"
 
 // Error handling
-export { CLIErrorHandler, CLIError, DefaultMessages } from "./errors"
+export { CLIErrorHandler, CLIError, DefaultMessages, ErrorCodes } from "./errors"
