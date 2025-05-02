@@ -1,7 +1,7 @@
 {
   "name": "climonad",
-  "version": "0.4.0",
-  "description": "A feature-rich framework for building structured and maintainable command-line tools",
+  "version": "1.0.0-alpha.1",
+  "description": "A zero-dependency CLI framework with monadic principles for creating type-safe, composable command-line interfaces with minimal boilerplate",
   "main": "./dist/main.cjs",
   "type": "module",
   "module": "./dist/main.mjs",
@@ -27,7 +27,6 @@
     "format": "prettier --check {test,src}/**/*.ts docs/**/*.md {*.md,*.ts,eslint.config.js}",
     "format:fix": "prettier --write {test,src}/**/*.ts docs/**/*.md {*.md,*.ts,eslint.config.js}",
     "prebench": "npm run build",
-    "bench": "deno bench test/bench.ts",
     "test:watch": "vitest -c vitest.config.ts --watch",
     "test:coverage": "vitest -c vitest.config.ts --coverage",
     "clean": "rimraf dist coverage build",
@@ -71,7 +70,7 @@
     "@eslint/js": "^9.17.0",
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "^22.10.2",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/coverage-v8": "^3.1.2",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.32.0",
@@ -84,7 +83,7 @@
     "tslib": "^2.8.1",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.1",
-    "vitest": "^2.1.8"
+    "vitest": "^3.1.2"
   },
   "publishConfig": {
     "access": "public"

@@ -7,13 +7,13 @@ const external = []
 
 export default [
   {
-    input: ["src/main.ts"],
+    input: ["src/index.ts"],
     plugins: [typescript(), reportDetails()],
     output: { dir: "build", format: "es", exports: "auto" },
     external,
   },
   {
-    input: "build/main.js",
+    input: "build/index.js",
     plugins: [
       esbuild({ minify: true, target: "esnext", minifyIdentifiers: true, minifySyntax: true, minifyWhitespace: true }),
       reportDetails(),
@@ -25,7 +25,7 @@ export default [
     external,
   },
   {
-    input: "build/src/main.d.ts",
+    input: "build/src/index.d.ts",
     plugins: [dts(), reportDetails()],
     output: { file: "dist/main.d.ts", format: "esm", exports: "auto" },
     external,
