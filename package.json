@@ -1,7 +1,7 @@
 {
   "name": "climonad",
   "version": "1.0.0-alpha.1",
-  "description": "A minimal, fast, and scalable CLI framework built on functional programming and type-safe design",
+  "description": "A zero-dependency CLI framework with monadic principles for creating type-safe, composable command-line interfaces with minimal boilerplate",
   "main": "./dist/main.cjs",
   "type": "module",
   "module": "./dist/main.mjs",
