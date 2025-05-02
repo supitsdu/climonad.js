@@ -27,7 +27,6 @@
     "format": "prettier --check {test,src}/**/*.ts docs/**/*.md {*.md,*.ts,eslint.config.js}",
     "format:fix": "prettier --write {test,src}/**/*.ts docs/**/*.md {*.md,*.ts,eslint.config.js}",
     "prebench": "npm run build",
-    "bench": "deno bench test/bench.ts",
     "test:watch": "vitest -c vitest.config.ts --watch",
     "test:coverage": "vitest -c vitest.config.ts --coverage",
     "clean": "rimraf dist coverage build",
