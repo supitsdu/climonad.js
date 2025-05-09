@@ -21,28 +21,48 @@ The help system in Climonad:
 - Gives you complete control over formatting and content
 - Can be customized to match your application's style
 - Is opt-in—you must explicitly configure it
-- Can be triggered with a customizable flag (default: `--help`)
+- Uses a class-based approach to define help behavior
 
 ## Help System Architecture
 
-### The Help Reporter
+### The CLIHelp Class
 
-The core of Climonad's help system is the **Help Reporter** function. This function receives context about your CLI and is responsible for producing help output:
+The core of Climonad's help system is the `CLIHelp` class, which encapsulates help functionality:
 
 ```ts
-type CLIHelpReporter = (context: CLIHelpConstructor) => void | Promise<void>
+export class CLIHelp {
+  constructor(
+    readonly reporter: HelpReporter,
+    readonly def: CLIDefinition,
+    readonly kind: "command" | "flag" = "flag",
+  ) {}
+}
+```
+
+The `CLIHelp` class takes:
+
+1. A help reporter function that generates the help output
+2. A definition for the help command/flag
+3. The kind of entry (command or flag) to register for help
+
+### The Help Reporter
+
+The help reporter is a function that receives context about your CLI and is responsible for producing help output:
+
+```ts
+type HelpReporter = (ctx: CLIHelpConstructor) => void | Promise<void>
 
 interface CLIHelpConstructor {
   commands: CLIEntry[] // Available commands in current context
   flags: CLIEntry[] // Available flags in current context
   root: CLIEntry // The root entry (usually the main CLI command)
-  parent: CLIEntry // The parent entry of the current
+  parent: CLIEntry | null // The parent entry of the current context
 }
 ```
 
 The help reporter is called when:
 
-1. A user explicitly requests help (using `--help` or your custom help flag)
+1. A user explicitly requests help (using the help flag or command)
 2. No valid action is found and the CLI needs to show available options
 
 ### Help Flow

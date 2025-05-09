@@ -1,14 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { createCLI, CLI } from "../src/createCLI"
-import { CLIRegistry, CLIParser } from "../src/core"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { CLIParser, CLIRegistry } from "../src/core"
+import { CLI, createCLI } from "../src/createCLI"
 import { CLIError, CLIErrorHandler } from "../src/errors"
 import { CLIHelpConstructor } from "../src/ui"
+import { CLIHelp } from "../src/ui/help"
+import * as cliHelpers from "../src/helpers/cli-helpers"
 
 // Mock dependencies
 vi.mock("../src/core", () => ({
   CLIRegistry: vi.fn().mockImplementation(() => ({
     initialize: vi.fn(),
     nodes: [],
+    register: vi.fn().mockReturnValue(0), // Return a fake index for registered items
+    children: { 0: [] },
   })),
   CLIParser: vi.fn().mockImplementation(() => ({
     resolveTokens: vi.fn().mockResolvedValue({
@@ -16,6 +20,10 @@ vi.mock("../src/core", () => ({
       enforceRequirements: vi.fn().mockReturnThis(),
       current: [],
     }),
+  })),
+  CLITokens: vi.fn().mockImplementation((options) => ({
+    tokens: new Set([options?.name]),
+    match: vi.fn((input) => input === options?.name),
   })),
 }))
 
@@ -33,12 +41,25 @@ vi.mock("../src/errors", () => ({
 
 vi.mock("../src/ui", () => ({
   CLIHelpConstructor: vi.fn().mockImplementation(() => ({})),
+  CLIHelp: vi.fn().mockImplementation((reporter, def, kind) => ({
+    reporter,
+    def,
+    kind: kind || "flag",
+  })),
+  createCLIHelp: vi.fn().mockImplementation((reporter, options) => ({
+    reporter,
+    def: { name: options?.name || "help", description: options?.description || "Help description" },
+    kind: options?.kind || "flag",
+  })),
 }))
 
 describe("createCLI", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
+
+  // Create a mock help reporter function
+  const mockHelpReporter = vi.fn()
 
   // Fixtures for testing CLI creation
   const createCliFixtures = [
@@ -48,9 +69,13 @@ describe("createCLI", () => {
       expected: { instanceof: CLI },
     },
     {
-      name: "custom help token",
-      options: { name: "test-cli", description: "A test CLI", help: "--help" },
-      expected: { instanceof: CLI, helpToken: "--help" },
+      name: "with CLIHelp object",
+      options: {
+        name: "test-cli",
+        description: "A test CLI",
+        help: new CLIHelp(mockHelpReporter, { name: "help", description: "Help description" }),
+      },
+      expected: { instanceof: CLI },
     },
     {
       name: "with custom error handler",
@@ -67,11 +92,6 @@ describe("createCLI", () => {
     it.each(createCliFixtures)("should create CLI with $name", ({ options, expected }) => {
       const cli = createCLI(options)
       expect(cli).toBeInstanceOf(expected.instanceof)
-
-      if (expected.helpToken) {
-        // @ts-expect-error - Accessing private property for testing
-        expect(cli.helpToken).toBe(expected.helpToken)
-      }
     })
 
     it("should return the same instance when passed an existing CLI", () => {
@@ -159,6 +179,8 @@ describe("createCLI", () => {
         const mockRegistry = {
           initialize: vi.fn(),
           nodes: mockNodes,
+          register: vi.fn().mockReturnValue(0),
+          children: { 0: [] },
         }
 
         const mockParser = {
@@ -172,12 +194,14 @@ describe("createCLI", () => {
         vi.mocked(CLIRegistry).mockImplementation(() => mockRegistry as any)
         vi.mocked(CLIParser).mockImplementation(() => mockParser as any)
 
+        // Create a mock help object
+        const mockHelp = new CLIHelp(mockHelpReporter, { name: "help", description: "Help description" })
+
         const cli = new CLI({
           name: "test-cli",
           description: "Test CLI",
           registry: mockRegistry as any,
-          help: true,
-          helpReporter: vi.fn(),
+          help: mockHelp,
         })
 
         const result = await cli.parse(input)
@@ -273,11 +297,16 @@ describe("createCLI", () => {
       it.each(runFixtures)(
         "should handle $name",
         async ({ input, mockParse, mockHelpReporter, shouldThrow, errorCode }) => {
+          // Create a proper help instance with the reporter
+          const helpInstance = mockHelpReporter
+            ? new CLIHelp(mockHelpReporter, { name: "help", description: "Help description" })
+            : null
+
           const cli = new CLI({
             name: "test-cli",
             description: "Test CLI",
             registry: new CLIRegistry(),
-            helpReporter: mockHelpReporter || vi.fn(),
+            help: helpInstance as CLIHelp | undefined,
           })
 
           if (mockParse) {
@@ -289,7 +318,8 @@ describe("createCLI", () => {
           } else {
             await expect(cli.run(input)).resolves.not.toThrow()
 
-            if (mockParse?.help) {
+            if (mockParse?.help && mockHelpReporter) {
+              // The help reporter should now be called via the help instance
               expect(mockHelpReporter).toHaveBeenCalled()
             }
 
@@ -330,6 +360,76 @@ describe("createCLI", () => {
       })
 
       await expect(cli.run([])).rejects.toThrow("CLI_INPUT_PROCESSING_FAILED")
+    })
+  })
+})
+
+// Tests for CLI helpers functionality
+describe("CLI Helper Functions", () => {
+  describe("processTokens", () => {
+    // Test fixtures for the CLI tokens processing
+    const mockRegistry = {
+      nodes: [
+        { index: 0, kind: "root", name: "cli", action: null },
+        { index: 1, kind: "flag", name: "help", value: true },
+        { index: 2, kind: "command", name: "help", action: null },
+        { index: 3, kind: "command", name: "run", action: vi.fn() },
+        { index: 4, kind: "flag", name: "verbose", value: true },
+        { index: 5, kind: "flag", name: "silent", value: false },
+        { index: 6, kind: "command", name: "assist", action: null },
+      ],
+    }
+
+    it("should detect flag-type help request when value is true", () => {
+      const indices = new Set([0, 1]) // root + help flag
+      const helpDef = { name: "help" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(true)
+    })
+
+    it("should not detect flag-type help request when value is false", () => {
+      const indices = new Set([0, 5]) // root + silent flag (value: false)
+      const helpDef = { name: "silent" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(false)
+    })
+
+    it("should detect command-type help request", () => {
+      const indices = new Set([0, 2]) // root + help command
+      const helpDef = { name: "help" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(true)
+    })
+
+    it("should detect command-type help with custom name", () => {
+      const indices = new Set([0, 6]) // root + assist command
+      const helpDef = { name: "assist" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(true)
     })
   })
 })

@@ -49,7 +49,10 @@ export const defaultMessages = {
   CLI_INVALID_INPUT: () => "CLI input must be an array of strings",
   CLI_HELP_REPORTER_NOT_SET: () => "Help reporter is not set. See documentation for more information",
   CLI_HELP_DISPLAY_FAILED: (error: unknown) => `Failed to display help information: ${error}`,
-  CLI_NO_ACTION_FOUND: () => "No command with an action was specified. Use --help to see available commands",
+  CLI_NO_ACTION_FOUND: (helpKind?: string, helpName?: string) => {
+    const helpCommand = helpKind === "command" ? helpName || "help" : `--${helpName || "help"}`
+    return `No command with an action was specified. Use ${helpCommand} to see available commands`
+  },
   CLI_ACTION_FAILED: (error: unknown) => `Error executing command: ${error}`,
   CLI_INPUT_PROCESSING_FAILED: (error: unknown) => `Failed to process CLI input: ${error}`,
 }

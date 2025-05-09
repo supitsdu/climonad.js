@@ -247,9 +247,21 @@ describe("Error Messages", () => {
       expect(defaultMessages.CLI_HELP_DISPLAY_FAILED(error)).toBe(`Failed to display help information: ${error}`)
     })
 
-    it("should return correct message for no action found", () => {
+    it("should return correct message for no action found with default help", () => {
       expect(defaultMessages.CLI_NO_ACTION_FOUND()).toBe(
         "No command with an action was specified. Use --help to see available commands",
+      )
+    })
+
+    it("should return correct message for no action found with command help", () => {
+      expect(defaultMessages.CLI_NO_ACTION_FOUND("command", "assist")).toBe(
+        "No command with an action was specified. Use assist to see available commands",
+      )
+    })
+
+    it("should return correct message for no action found with custom flag help", () => {
+      expect(defaultMessages.CLI_NO_ACTION_FOUND("flag", "assist")).toBe(
+        "No command with an action was specified. Use --assist to see available commands",
       )
     })
 

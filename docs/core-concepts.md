@@ -183,18 +183,26 @@ const errorHandler = new CLIErrorHandler({
 
 ## Help System
 
-The help system allows you to provide contextual help to users.
+Climonad's help system allows you to provide contextual help to users in a way that matches your application's style.
 
-### Help Reporter
+### The CLIHelp Class
 
-The help reporter defines how help information is displayed:
+The help system is built around the `CLIHelp` class, which encapsulates the functionality needed to display help information:
 
 ```ts
+// Creating a custom help reporter
 const helpReporter = ({ commands, flags, root }) => {
   // Custom help output logic
   console.log(`${root.name} - ${root.description}`)
   // Display commands and flags...
 }
+
+// Creating a CLIHelp instance
+const helpInstance = new CLIHelp(
+  helpReporter,
+  { name: "help", description: "Display help information", aliases: ["h"] },
+  "flag", // Can be "flag" or "command"
+)
 ```
 
 ### Help Configuration
@@ -203,13 +211,17 @@ Configure help behavior when creating the CLI:
 
 ```ts
 const cli = createCLI({
-  // ...
-  help: true, // or "custom-help-flag"
-  helpReporter,
+  name: "my-cli",
+  description: "My CLI application",
+  help: helpInstance,
 })
 ```
 
-This allows users to access help with `--help` or your custom help flag.
+The `CLIHelp` class gives you full control over how help information is displayed, including:
+
+- The format and styling of the help output
+- Whether help is triggered by a flag (e.g., `--help`) or a command (e.g., `help`)
+- The name and aliases used for the help trigger
 
 ## Presets
 
