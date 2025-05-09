@@ -1,5 +1,5 @@
 import { CLIRegistry } from "../core"
-import { CLIEntry } from "../types"
+import type { CLIDefinition, CLIEntry } from "../types"
 
 export class CLIHelpConstructor {
   parent: CLIEntry | null
@@ -21,3 +21,26 @@ export class CLIHelpConstructor {
 }
 
 export type HelpReporter = (ctx: CLIHelpConstructor) => void | Promise<void>
+
+export class CLIHelp {
+  constructor(
+    readonly reporter: HelpReporter,
+    readonly def: CLIDefinition,
+    readonly kind: "command" | "flag" = "flag",
+  ) {}
+}
+
+export const createCLIHelp = (
+  reporter: HelpReporter,
+  { kind, aliases, ...options }: Partial<CLIDefinition & { kind: "command" | "flag" }> = {},
+): CLIHelp => {
+  return new CLIHelp(
+    reporter,
+    {
+      name: options.name || "help",
+      description: options.description || "Display help information",
+      aliases: aliases || ["h"],
+    },
+    kind,
+  )
+}

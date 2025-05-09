@@ -1,12 +1,13 @@
-import { CLIParser, CLIRegistry } from "./core"
+import { CLIRegistry } from "./core"
 import { CLIError, CLIErrorHandler } from "./errors"
+import { parseInputToTokens, processTokens } from "./helpers/cli-helpers"
 import { CLINode } from "./nodes"
 import { CLIAction, CLIDefinition } from "./types"
-import { CLIHelpConstructor, HelpReporter } from "./ui"
+import { CLIHelpConstructor } from "./ui"
+import { CLIHelp } from "./ui/help"
 
 export interface CLIOptions extends CLIDefinition {
-  help?: boolean | string
-  helpReporter?: HelpReporter
+  help?: CLIHelp
   errorHandler?: CLIErrorHandler
 }
 
@@ -15,21 +16,29 @@ export interface CLIConstructorOptions extends CLIOptions {
 }
 
 export class CLI<FlagTypes extends Record<string, unknown> = Record<string, unknown>> extends CLINode {
-  private readonly helpToken: string
-  private readonly showHelp: boolean
-  public readonly helpReporter: HelpReporter
+  public readonly help: CLIHelp | null
 
   constructor(options: CLIConstructorOptions) {
     const errorHandler = options.errorHandler || new CLIErrorHandler()
     super(options.registry, null, errorHandler)
     this.registry.initialize(options)
-    this.helpToken = typeof options.help === "string" ? options.help : "help"
-    this.showHelp = options.help === true || typeof options.help === "string"
-    this.helpReporter =
-      options.helpReporter ||
-      (() => {
-        throw this.errorHandler.create("CLI_HELP_REPORTER_NOT_SET")
-      })
+    this.help = options.help || null
+  }
+
+  registerHelp(cliHelp: CLIHelp | null = null) {
+    const help = cliHelp ?? this.help
+
+    if (help === null) return null
+
+    if (help.kind === "flag") {
+      this.flag(help.def)
+    } else if (help.kind === "command") {
+      this.cmd(help.def)
+    } else {
+      return null
+    }
+
+    return this
   }
 
   public async parse(input: string[]): Promise<{
@@ -37,74 +46,71 @@ export class CLI<FlagTypes extends Record<string, unknown> = Record<string, unkn
     actions: CLIAction[]
     help: CLIHelpConstructor | null
   }> {
-    const parser = new CLIParser(this.registry, this.errorHandler)
-    const tokens = await parser.resolveTokens(input)
-    const indices = tokens.populateDefaults().enforceRequirements().current
-
-    const flags = new Map<string & keyof FlagTypes, unknown>()
-
-    let lastCommand = 0
-    let reportHelp = false
-
-    const actions: CLIAction[] = []
-
-    for (const index of indices) {
-      const entry = this.registry.nodes[index]
-
-      if (entry.name === this.helpToken && entry.value === true && this.showHelp) {
-        reportHelp = true
-      }
-
-      if (entry.kind === "flag") {
-        flags.set(entry.name as string & keyof FlagTypes, entry.value ?? entry.default)
-      }
-
-      if (entry.kind === "command" && entry.action) {
-        actions.push(entry.action)
-        lastCommand = entry.index
-      }
-    }
+    const helpRegistered = this.registerHelp()
+    const tokens = await parseInputToTokens(input, this.registry, this.errorHandler)
+    const { flags, actions, shouldShowHelp, lastCommandIndex } = processTokens<FlagTypes>(tokens, this.registry, {
+      instance: helpRegistered,
+      def: this.help?.def,
+    })
 
     return {
       flags,
       actions,
-      help: reportHelp ? new CLIHelpConstructor(this.registry, lastCommand) : null,
+      help: shouldShowHelp ? new CLIHelpConstructor(this.registry, lastCommandIndex) : null,
     }
   }
 
   public async run(input: string[]) {
     try {
-      if (!Array.isArray(input)) {
-        throw this.errorHandler.create("CLI_INVALID_INPUT")
-      }
-
+      this.validateInput(input)
       const { flags, actions, help } = await this.parse(input)
 
       if (help !== null) {
-        try {
-          return await this.helpReporter(help)
-        } catch (helpError) {
-          throw this.errorHandler.create("CLI_HELP_DISPLAY_FAILED", helpError)
-        }
+        return await this.displayHelp(help)
       }
 
-      if (!actions.length) {
-        throw this.errorHandler.create("CLI_NO_ACTION_FOUND")
-      }
-
-      for (let idx = 0; idx < actions.length; idx++) {
-        try {
-          await actions[idx](flags)
-        } catch (actionError) {
-          throw this.errorHandler.create("CLI_ACTION_FAILED", actionError)
-        }
-      }
+      this.ensureActionsExist(actions)
+      await this.executeActions(actions, flags)
     } catch (e) {
-      if (e instanceof CLIError) {
-        throw e
-      }
-      throw this.errorHandler.create("CLI_INPUT_PROCESSING_FAILED", e)
+      this.handleError(e)
     }
+  }
+
+  private validateInput(input: unknown) {
+    if (!Array.isArray(input)) {
+      throw this.errorHandler.create("CLI_INVALID_INPUT")
+    }
+  }
+
+  private ensureActionsExist(actions: CLIAction[]) {
+    if (!actions.length) {
+      throw this.errorHandler.create("CLI_NO_ACTION_FOUND")
+    }
+  }
+
+  private async displayHelp(helpConstructor: CLIHelpConstructor) {
+    try {
+      return await this.help?.reporter(helpConstructor)
+    } catch (helpError) {
+      throw this.errorHandler.create("CLI_HELP_DISPLAY_FAILED", helpError)
+    }
+  }
+
+  private async executeActions(actions: CLIAction[], flags: Map<string & keyof FlagTypes, unknown>) {
+    for (const action of actions) {
+      try {
+        await action(flags)
+      } catch (actionError) {
+        throw this.errorHandler.create("CLI_ACTION_FAILED", actionError)
+      }
+    }
+  }
+
+  private handleError(error: unknown) {
+    if (error instanceof CLIError) {
+      throw error
+    }
+    throw this.errorHandler.create("CLI_INPUT_PROCESSING_FAILED", error)
   }
 }
 
