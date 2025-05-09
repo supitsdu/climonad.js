@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { createCLI, CLI } from "../src/createCLI"
-import { CLIRegistry, CLIParser, CLITokens } from "../src/core"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { CLIParser, CLIRegistry } from "../src/core"
+import { CLI, createCLI } from "../src/createCLI"
 import { CLIError, CLIErrorHandler } from "../src/errors"
 import { CLIHelpConstructor } from "../src/ui"
-import { CLIHelp, createCLIHelp } from "../src/ui/help"
+import { CLIHelp } from "../src/ui/help"
 
 // Mock dependencies
 vi.mock("../src/core", () => ({
