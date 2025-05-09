@@ -4,6 +4,7 @@ import { CLI, createCLI } from "../src/createCLI"
 import { CLIError, CLIErrorHandler } from "../src/errors"
 import { CLIHelpConstructor } from "../src/ui"
 import { CLIHelp } from "../src/ui/help"
+import * as cliHelpers from "../src/helpers/cli-helpers"
 
 // Mock dependencies
 vi.mock("../src/core", () => ({
@@ -359,6 +360,76 @@ describe("createCLI", () => {
       })
 
       await expect(cli.run([])).rejects.toThrow("CLI_INPUT_PROCESSING_FAILED")
+    })
+  })
+})
+
+// Tests for CLI helpers functionality
+describe("CLI Helper Functions", () => {
+  describe("processTokens", () => {
+    // Test fixtures for the CLI tokens processing
+    const mockRegistry = {
+      nodes: [
+        { index: 0, kind: "root", name: "cli", action: null },
+        { index: 1, kind: "flag", name: "help", value: true },
+        { index: 2, kind: "command", name: "help", action: null },
+        { index: 3, kind: "command", name: "run", action: vi.fn() },
+        { index: 4, kind: "flag", name: "verbose", value: true },
+        { index: 5, kind: "flag", name: "silent", value: false },
+        { index: 6, kind: "command", name: "assist", action: null },
+      ],
+    }
+
+    it("should detect flag-type help request when value is true", () => {
+      const indices = new Set([0, 1]) // root + help flag
+      const helpDef = { name: "help" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(true)
+    })
+
+    it("should not detect flag-type help request when value is false", () => {
+      const indices = new Set([0, 5]) // root + silent flag (value: false)
+      const helpDef = { name: "silent" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(false)
+    })
+
+    it("should detect command-type help request", () => {
+      const indices = new Set([0, 2]) // root + help command
+      const helpDef = { name: "help" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(true)
+    })
+
+    it("should detect command-type help with custom name", () => {
+      const indices = new Set([0, 6]) // root + assist command
+      const helpDef = { name: "assist" }
+      const mockCLI = {} as CLI<any>
+
+      const result = cliHelpers.processTokens(indices, mockRegistry as any, {
+        instance: mockCLI,
+        def: helpDef,
+      })
+
+      expect(result.shouldShowHelp).toBe(true)
     })
   })
 })

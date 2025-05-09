@@ -53,8 +53,15 @@ function checkForHelpRequest<FlagTypes extends Record<string, unknown>>(
   help: { instance: CLI<FlagTypes> | null; def: { name: string } | undefined },
   currentValue: boolean,
 ): boolean {
-  if (help.instance && entry.name === help.def?.name && entry.value === true) {
-    return true
+  if (help.instance && entry.name === help.def?.name) {
+    // For flag-type help, check if value is true
+    if (entry.kind === "flag") {
+      return entry.value === true
+    }
+    // For command-type help, it's always a help request when the name matches
+    if (entry.kind === "command") {
+      return true
+    }
   }
   return currentValue
 }
