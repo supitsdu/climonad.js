@@ -103,13 +103,13 @@ cli.run(process.argv.slice(2)).catch((error) => {
 
 ## 🧾 You Control Help Output
 
-Climonad doesn’t guess what your help experience should look like. If users ask for help and you haven’t defined how to show it, that’s on purpose. You’re in charge of what’s printed.
+Climonad doesn't guess what your help experience should look like. You're in charge of what's printed when users ask for help.
 
 ### 1. Create a Help Reporter
 
 ```ts
 // help.ts
-import { CLIHelpConstructor } from "climonad"
+import { CLIHelpConstructor, createCLIHelp } from "climonad"
 
 export const helpReporter = ({ commands, flags, root }: CLIHelpConstructor) => {
   console.log(`\n${root.name} - ${root.description}\n`)
@@ -130,6 +130,9 @@ export const helpReporter = ({ commands, flags, root }: CLIHelpConstructor) => {
 
   console.log("")
 }
+
+// Create a CLIHelp instance that uses your reporter
+export const cliHelp = createCLIHelp(helpReporter)
 ```
 
 ### 2. Plug It In
@@ -137,32 +140,41 @@ export const helpReporter = ({ commands, flags, root }: CLIHelpConstructor) => {
 ```ts
 // cli.ts
 import { createCLI } from "climonad"
-import { helpReporter } from "./help"
+import { cliHelp } from "./help"
 
 export const cli = createCLI({
   name: "example-cli",
   description: "An example CLI application",
-  help: true,
-  helpReporter,
+  help: cliHelp,
 })
 ```
 
-### 🛎️ Change the Help Flag
+### 🛎️ Custom Help Configuration
 
-Want `--assist` instead of `--help`? Easy:
+Want to change the help behavior? The `createCLIHelp` function takes options to customize your help trigger:
 
 ```ts
-help: "assist"
+// Custom name and kind
+const assistHelp = createCLIHelp(helpReporter, {
+  name: "assist", // Changes flag/command name from "help" to "assist"
+  description: "Show assistance information",
+  // kind: "command", // Makes it a command instead of a flag
+  aliases: ["a", "?"], // Custom aliases
+})
 ```
 
-Now your users run:
+Now your users can get help with:
 
 ```bash
+# If kind is "flag" (default)
 example-cli --assist
+
+# If kind is "command"
+# example-cli assist
 ```
 
 > [!WARNING]
-> If you don't supply a `helpReporter`, help output won't be shown—even if `help` is enabled.
+> If you don't supply a help instance with a reporter function, help output won't be shown—even if users try to access it.
 
 ---
 
@@ -318,6 +330,20 @@ Presets are the preferred way to express custom validations currently.
 > - **Runtime**: Constant-time lookups and efficient traversal.
 
 It's designed for real-world use—fast enough for scripts, structured enough for full CLI suites.
+
+---
+
+## 💡 Public API Stability
+
+Climonad is currently in alpha stage, and while we strive to minimize breaking changes, some internal implementations might change.
+
+For the most stable experience:
+
+- Use the helper functions (`createCLI`, `createCLIHelp`) rather than directly instantiating classes
+- Rely on the documented public API rather than internal implementation details
+- Check the changelog when upgrading between alpha/beta versions
+
+We'll clearly document any breaking changes and provide migration paths as needed.
 
 ---
 
