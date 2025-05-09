@@ -84,7 +84,9 @@ export class CLI<FlagTypes extends Record<string, unknown> = Record<string, unkn
 
   private ensureActionsExist(actions: CLIAction[]) {
     if (!actions.length) {
-      throw this.errorHandler.create("CLI_NO_ACTION_FOUND")
+      const helpKind = this.help?.kind
+      const helpName = this.help?.def.name
+      throw this.errorHandler.create("CLI_NO_ACTION_FOUND", helpKind, helpName)
     }
   }
 
